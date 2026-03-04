@@ -71,7 +71,6 @@
     .q-label{position:absolute; transform:translate(-50%,-50%); pointer-events:auto; cursor:pointer; transition:opacity .28s; user-select:none;}
     .ql-pip{position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:8px; height:8px; border-radius:50%; background:rgba(79,195,247,.9); box-shadow:0 0 12px rgba(79,195,247,.8); z-index:2; pointer-events:none;}
     
-    /* 🏆 升級版：加大 Label 尺寸、Padding 與字體，讓畫面更豐富 */
     .ql-box{position:relative; background:rgba(3,8,36,.88); backdrop-filter:blur(16px); border:1px solid rgba(79,195,247,.4); padding:10px 14px; max-width:180px; min-width:100px;}
     .ql-box::before, .ql-box::after{content:''; position:absolute; width:10px; height:10px; border-color:rgba(79,195,247,.9); border-style:solid;}
     .ql-box::before{top:-1px; left:-1px; border-width:2px 0 0 2px;}
@@ -162,7 +161,7 @@
 
 <script>
 const WORKER_URL = 'https://artogoai01.ougaga26.workers.dev/'; 
-const NUM_Q = 10; // 🎯 改回 10 個問題
+const NUM_Q = 10; 
 
 let artworks = [];
 let curAW = 0;
@@ -170,12 +169,18 @@ let currentAudio = new Audio();
 let isPlaying = false;
 let preloadTimer = null;
 
-// ════ CSV 資料載入 ════
+// ════ CSV 資料載入 (修正：加入 order 排序邏輯) ════
 window.onload = () => {
   Papa.parse("data.csv", {
     download: true, header: true, skipEmptyLines: true,
     complete: function(results) {
-      artworks = results.data.map(r => ({
+      // 🏆 關鍵：根據 CSV 裡面的 order 欄位進行數字排序
+      let data = results.data;
+      if (data.length > 0 && data[0].hasOwnProperty('order')) {
+        data.sort((a, b) => (parseInt(a.order) || 0) - (parseInt(b.order) || 0));
+      }
+
+      artworks = data.map(r => ({
         nm: r.title,
         img: `image/${r.image}.jpg`,
         audio: `audio/${r.audio}.mp3`,
@@ -183,6 +188,7 @@ window.onload = () => {
         dynamicQs: null, 
         isFetching: false 
       }));
+      
       if (artworks.length > 0) { 
         initSphere(); 
         changeAW(0); 
@@ -235,7 +241,6 @@ function changeAW(d){
   currentAudio.pause(); currentAudio.src = a.audio; currentAudio.load(); isPlaying = false;
   document.getElementById('pl-btn').textContent = '▶'; document.getElementById('pf').style.width = '0%';
 
-  // 🏆 防手抖機制 (Debounce)：停留 3 秒才發送請求 (3秒機制)
   clearTimeout(preloadTimer);
   preloadTimer = setTimeout(() => {
     preloadDynamicQuestions(curAW);
@@ -245,9 +250,7 @@ function changeAW(d){
 // ════ AI 背景偷偷生問題機制 ════
 async function preloadDynamicQuestions(artIndex) {
   const curArt = artworks[artIndex];
-  
   if (curArt.dynamicQs || curArt.isFetching) return; 
-
   curArt.isFetching = true;
 
   if (document.getElementById('sa').classList.contains('show') && artIndex === curAW) {
@@ -255,10 +258,7 @@ async function preloadDynamicQuestions(artIndex) {
   }
 
   const prompt = `你是一個專業的博物館語音導覽員。觀眾正在觀賞展品《${curArt.nm}》，它的背景介紹是：「${curArt.desc}」。請根據這段介紹，生成 ${NUM_Q} 個觀眾可能會想深入追問的問題（例如關於畫家背景、細節、歷史意義等）。
-  要求：
-  1. 只要輸出問題文字就好，每行一個問題。
-  2. 絕對不要加數字編號、不要加項目符號、不要有空行。
-  3. 問題請保持口語化且簡短（10-15 字內最佳）。`;
+  要求：只要輸出問題文字就好，每行一個問題。不要編號。保持口語化且簡短(15字內)。`;
 
   try {
     const response = await fetch(WORKER_URL, {
@@ -267,10 +267,7 @@ async function preloadDynamicQuestions(artIndex) {
       body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
     });
     
-    if (response.status === 429) {
-      throw new Error("429");
-    }
-    
+    if (response.status === 429) throw new Error("429");
     const data = await response.json();
     if (!response.ok) throw new Error("API Error");
 
@@ -286,19 +283,11 @@ async function preloadDynamicQuestions(artIndex) {
     if (curAW === artIndex && document.getElementById('sa').classList.contains('show')) {
       updateQuestionLabels(qs);
     }
-
   } catch (err) {
-    console.warn("生成問題失敗:", err.message);
     curArt.isFetching = false;
-    
-    let errMsg = "載入失敗，點擊重試";
-    if (err.message === "429") {
-      errMsg = "API忙碌中，請稍後重試";
-    }
-    
+    let errMsg = err.message === "429" ? "API忙碌中，請稍後重試" : "載入失敗，點擊重試";
     if (curAW === artIndex && document.getElementById('sa').classList.contains('show')) {
-      const errQs = Array(NUM_Q).fill(errMsg);
-      updateQuestionLabels(errQs);
+      updateQuestionLabels(Array(NUM_Q).fill(errMsg));
     }
   }
 }
@@ -315,7 +304,7 @@ function updateQuestionLabels(qs) {
 // ════ 回答觀眾的問題 ════
 async function fetchGeminiAnswer(questionText) {
   const curArt = artworks[curAW];
-  const prompt = `你現在是專業導覽員。觀眾正在看展品《${curArt.nm}》。背景：${curArt.desc}。提問：「${questionText}」。請用繁體中文、口語親切地回答(150字內)。回答完畢後，請務必根據展品內容，另外想出「兩個」讓觀眾可以繼續深入了解的延伸提問，並嚴格使用「//」作為分隔符號。格式範例：(你的回答內容)//(你出的延伸問題一)//(你出的延伸問題二)`;
+  const prompt = `你現在是專業導覽員。觀眾正在看展品《${curArt.nm}》。背景：${curArt.desc}。提問：「${questionText}」。請用繁體中文、口語親切地回答(150字內)。回答完畢後，想出「兩個」相關的延伸問題，並用「//」分隔。格式：(回答內容)//(延伸提問一)//(延伸提問二)`;
 
   try {
     const response = await fetch(WORKER_URL, {
@@ -323,13 +312,8 @@ async function fetchGeminiAnswer(questionText) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
     });
-    
-    if (response.status === 429) {
-      return "目前提問人數較多，API 額度已達上限，請休息一下稍後再試！//重新嘗試";
-    }
-
+    if (response.status === 429) return "API 額度已達上限，請休息一下稍後再試！//重新嘗試";
     const data = await response.json();
-    if (!response.ok) throw new Error(data.error?.message || response.statusText);
     return data.candidates[0].content.parts[0].text;
   } catch (err) {
     return `⚠️ 網路連線錯誤，請稍後再試。//重新嘗試`;
@@ -341,36 +325,24 @@ function showAI(){
   currentAudio.pause(); isPlaying = false; document.getElementById('pl-btn').textContent = '▶'; 
   document.getElementById('sa').classList.add('show'); 
   document.getElementById('g-bottom-orb').classList.add('hide'); 
-  
   const curArt = artworks[curAW];
-  
-  if (curArt.dynamicQs) {
-    updateQuestionLabels(curArt.dynamicQs);
-  } else {
+  if (curArt.dynamicQs) updateQuestionLabels(curArt.dynamicQs);
+  else {
     if (!curArt.isFetching) preloadDynamicQuestions(curAW);
-    
-    const tempQs = Array(NUM_Q).fill("AI 深度解析中...");
-    updateQuestionLabels(tempQs);
+    updateQuestionLabels(Array(NUM_Q).fill("AI 深度解析中..."));
     qLabelEls.forEach(el => el.style.pointerEvents = 'none'); 
   }
 }
-
 function hideAI(){ document.getElementById('sa').classList.remove('show'); document.getElementById('g-bottom-orb').classList.remove('hide'); closeSheet(); }
 
 async function renderAnswerSheet(qText, isMain = false, idx = 0) {
-  if (qText.includes("忙碌中") || qText.includes("重試")) {
-    preloadDynamicQuestions(curAW); 
-    return;
-  }
-
+  if (qText.includes("忙碌中") || qText.includes("重試")) { preloadDynamicQuestions(curAW); return; }
   document.getElementById('seyebrow').textContent = isMain ? `QUERY.${String(idx).padStart(2,'0')}` : `FOLLOW-UP ANALYTICS`;
   document.getElementById('sheetq').textContent = qText;
   document.getElementById('sheeta').innerHTML = '<div class="tdots"><div class="td"></div><div class="td"></div><div class="td"></div></div>';
   document.getElementById('ans-sheet').classList.add('open');
-  
   const reply = await fetchGeminiAnswer(qText);
   const parts = reply.split('//').map(s => s.trim()).filter(s => s);
-  
   let html = `<div class="sheet-ans">${parts[0].replace(/\n/g,'<br>')}</div>`;
   if(parts.length > 1){
     html += `<div class="follow-wrap"><div class="follow-label">// 延伸探索</div>`;
@@ -390,7 +362,6 @@ let renderer, scene, camera, wire;
 let baseY=0, baseX=0, isDrag=false, lastPX=0, lastPY=0, sphereInited=false, qLabelEls=[];
 const SPHRAD = 1.35; 
 const SPHERE_Y = 0.28;
-
 const anchors = (()=>{ 
   const pts=[]; 
   for(let i=0; i<NUM_Q; i++){ 
@@ -400,7 +371,6 @@ const anchors = (()=>{
   } 
   return pts; 
 })();
-
 function initSphere(){
   if(sphereInited) return;
   sphereInited=true;
@@ -412,32 +382,25 @@ function initSphere(){
   camera=new THREE.PerspectiveCamera(58, PW/PH, 0.1, 100);
   camera.position.set(0, 0, 3.9);
   camera.lookAt(0, SPHERE_Y, 0);
-
   window.addEventListener('resize', () => { PW=window.innerWidth; PH=window.innerHeight; camera.aspect=PW/PH; camera.updateProjectionMatrix(); renderer.setSize(PW, PH, false); });
-  
   wire=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.IcosahedronGeometry(SPHRAD, 3)), new THREE.LineBasicMaterial({color:0x4fc3f7, transparent:true, opacity:0.25}));
   wire.position.y=SPHERE_Y; scene.add(wire);
-
   const layer=document.getElementById('qlayer');
   for(let i=0; i<NUM_Q; i++){
     const el=document.createElement('div'); el.className='q-label'; 
     el.innerHTML=`<div class="ql-pip"></div><div class="ql-box"><span class="ql-num">Q.${String(i+1).padStart(2,'0')}</span><span class="ql-text">AI 準備中...</span></div>`;
-    
     el.addEventListener('click', () => {
       const text = el.querySelector('.ql-text').textContent;
-      if(text.includes('解析中') || text.includes('預載中') || text.includes('準備中')) return; 
-
+      if(text.includes('中') || text.includes('預載') || text.includes('準備')) return; 
       qLabelEls.forEach(l => l.classList.remove('active'));
       el.classList.add('active');
       renderAnswerSheet(text, true, i+1);
     });
     layer.appendChild(el); qLabelEls.push(el);
   }
-
   canvas.addEventListener('pointerdown',e=>{ isDrag=true; lastPX=e.clientX; lastPY=e.clientY; canvas.setPointerCapture(e.pointerId); });
   canvas.addEventListener('pointermove',e=>{ if(!isDrag) return; baseY+=(e.clientX-lastPX)*0.008; baseX+=(e.clientY-lastPY)*0.005; lastPX=e.clientX; lastPY=e.clientY; });
   canvas.addEventListener('pointerup',()=>{ isDrag=false; });
-
   (function animate(){
     requestAnimationFrame(animate);
     if(!isDrag){ baseY+=0.0005; baseX=Math.max(-0.42,Math.min(0.42,baseX)); }
@@ -446,7 +409,6 @@ function initSphere(){
     updateLabels(); 
   })();
 }
-
 const _v3=new THREE.Vector3(), _euler=new THREE.Euler();
 function updateLabels(){
   const sH = document.getElementById('ans-sheet').classList.contains('open') ? 360 : 0;
