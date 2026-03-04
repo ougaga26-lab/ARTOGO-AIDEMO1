@@ -320,7 +320,7 @@ function initSphere(){
   });
 
   canvas.addEventListener('pointerdown',e=>{ isDrag=true; lastPX=e.clientX; lastPY=e.clientY; canvas.setPointerCapture(e.pointerId); });
-  canvas.addEventListener('pointermove',e=>{ if(!isDrag) return; baseY+=(e.clientX-lastPX)*0.008; baseX+=(e.clientY-lastPY)*0.005; lastPX=e.clientX; lastPY=e.clientY; });
+  canvas.addEventListener('pointermove',e=>{ if(!isDrag) return; baseY+=(e.clientX-lastPX)*0.008; baseX+=(e.clientY-lastPY)*0.003; lastPX=e.clientX; lastPY=e.clientY; });
   canvas.addEventListener('pointerup',()=>{ isDrag=false; });
 
   (function animate(){
