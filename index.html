@@ -41,7 +41,6 @@
     .g-bottom {position: absolute; bottom: 0; left: 0; right: 0; padding-top: 100px; padding-bottom: calc(25px + env(safe-area-inset-bottom)); display: flex; justify-content: center; align-items: center; background: linear-gradient(to top, #071a3a 15%, rgba(7, 26, 58, 0.6) 55%, transparent 100%); transition: opacity 0.4s ease, transform 0.4s ease; z-index: 20; pointer-events: none; }
     .g-bottom.hide { opacity: 0; pointer-events: none; transform: translateY(30px); }
     
-    /* 華麗球體 */
     .mini-orb { width: 60px; height: 60px; position: relative; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 10; transition: transform 0.2s; pointer-events: auto; }
     .mo-glow { position: absolute; width: 100px; height: 100px; border-radius: 50%; background: radial-gradient(circle, rgba(79, 195, 247, 0.3) 0%, rgba(138, 43, 226, 0.1) 45%, transparent 70%); animation: pulseGlow 3s ease-in-out infinite alternate; pointer-events: none; }
     .mo-core { position: absolute; width: 42px; height: 42px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #e0b0ff 0%, #a855f7 25%, #4338ca 65%, #1e1b4b 100%); box-shadow: inset -3px -3px 8px rgba(0,0,0,0.6), inset 4px 4px 10px rgba(255,255,255,0.7), 0 0 14px rgba(168, 85, 247, 0.5); animation: morphCore 6s ease-in-out infinite alternate; }
@@ -58,7 +57,6 @@
     .bk-btn{width:36px; height:36px; border-radius:50%; border:1px solid rgba(255,255,255,.15); background:rgba(6,12,40,.7); backdrop-filter:blur(14px); color:rgba(255,255,255,.65); font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center; pointer-events:auto;}
     .sa-badge{font-size:9px; letter-spacing:2px; text-transform:uppercase; color:rgba(79,195,247,.8); background:rgba(6,12,40,.7); backdrop-filter:blur(14px); border:1px solid rgba(79,195,247,.25); padding:6px 14px; border-radius:20px;}
     
-    /* 標籤設置 */
     .q-labels-layer{position:absolute;inset:0;z-index:15;pointer-events:none;}
     .q-label{position:absolute; transform:translate(-50%,-50%); transition:opacity .28s; user-select:none; pointer-events: none;}
     .ql-pip{position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:8px; height:8px; border-radius:50%; background:rgba(79,195,247,.9); box-shadow:0 0 12px rgba(79,195,247,.8); z-index:2;}
@@ -75,7 +73,11 @@
     .sheet-close{width:32px; height:32px; border-radius:50%; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.05); color:rgba(255,255,255,.5); font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center;}
     .sheet-body{flex:1; overflow-y:auto; padding:0 22px 30px; scrollbar-width:none;}
     .sheet-q{font-size:17px; font-weight:600; color:#fff; line-height:1.4; margin-bottom:16px;}
+    
+    /* 修正思考中文字顏色 */
+    #sheeta { color: #4fc3f7; font-size: 14px; line-height: 1.85; }
     .sheet-ans{font-size:14px; color:rgba(255,255,255,0.8); line-height:1.85;}
+    
     .follow-wrap{margin-top:18px; padding-top:15px; border-top:1px solid rgba(255,255,255,0.08);}
     .follow-btn{font-size:12px; color:rgba(79,195,247,.8); padding:10px 14px; margin-bottom:8px; border:1px solid rgba(79,195,247,.15); background:rgba(79,195,247,.05); cursor:pointer; display:block; width:100%; text-align:left; border-radius:8px;}
     
@@ -119,7 +121,8 @@
   <div id="sa">
     <div class="sa-bg"></div><div class="sa-grid"></div><canvas id="orb-canvas"></canvas>
     <div class="sa-topbar">
-      <button class="bk-btn" onclick="hideAI()">←</button><span class="sa-badge">AI 深度解析引擎</span>
+      <button class="bk-btn" onclick="hideAI()">←</button>
+      <span class="sa-badge">ARTOGO_AI黛尼看展引擎</span>
     </div>
     <div class="q-labels-layer" id="qlayer"></div>
     <div class="ans-sheet" id="ans-sheet">
@@ -139,7 +142,6 @@ let currentAudio = new Audio();
 let isPlaying = false;
 let preloadTimer = null;
 
-// ════ CSV 載入 & 排序 ════
 window.onload = () => {
   Papa.parse("data.csv", {
     download: true, header: true, skipEmptyLines: true,
@@ -161,7 +163,6 @@ window.onload = () => {
   });
 };
 
-// ════ 播放器修正 ════
 document.getElementById('p-track').addEventListener('click', (e) => {
   const rect = e.currentTarget.getBoundingClientRect();
   const pos = (e.clientX - rect.left) / rect.width;
@@ -215,7 +216,6 @@ function changeAW(d){
   preloadTimer = setTimeout(() => preloadFullQuestions(curAW), 3000);
 }
 
-// ════ 全自動預載 10 個問題 (含快取) ════
 async function preloadFullQuestions(artIndex) {
   const curArt = artworks[artIndex];
   const cacheKey = `qs_v3_${curArt.nm}`;
@@ -266,7 +266,9 @@ function updateQuestionLabels(qs) {
 
 async function renderAnswerSheet(qText) {
   document.getElementById('sheetq').textContent = qText;
-  document.getElementById('sheeta').innerHTML = 'AI 思考中...';
+  
+  // 修改思考中文字
+  document.getElementById('sheeta').innerHTML = 'AI黛尼思考中...請稍後';
   document.getElementById('ans-sheet').classList.add('open');
   
   const prompt = `展品《${artworks[curAW].nm}》，背景：${artworks[curAW].desc}。提問：「${qText}」。親切口語回答(150字內)，結尾加兩個延伸提問用//分隔。`;
@@ -280,6 +282,7 @@ async function renderAnswerSheet(qText) {
     const reply = data.candidates[0].content.parts[0].text;
     const parts = reply.split('//').map(s => s.trim()).filter(s => s);
     
+    // 答案切換回白色字體樣式
     let html = `<div class="sheet-ans">${parts[0].replace(/\n/g,'<br>')}</div>`;
     if(parts.length > 1){
       html += `<div class="follow-wrap">`;
@@ -306,7 +309,6 @@ function showAI(){
 function hideAI(){ document.getElementById('sa').classList.remove('show'); document.getElementById('g-bottom-orb').classList.remove('hide'); closeSheet(); }
 function closeSheet(){ document.getElementById('ans-sheet').classList.remove('open'); }
 
-// ════ THREE.JS ════
 let renderer, scene, camera, wire, qLabelEls=[];
 function initSphere(){
   const canvas=document.getElementById('orb-canvas');
@@ -331,20 +333,9 @@ function initSphere(){
     layer.appendChild(el); qLabelEls.push(el);
   }
 
-  // 拖曳控制
-  let isDown = false, lastX, lastY;
-  canvas.addEventListener('pointerdown', e => { isDown = true; lastX = e.clientX; lastY = e.clientY; canvas.setPointerCapture(e.pointerId); });
-  canvas.addEventListener('pointermove', e => {
-    if (!isDown) return;
-    wire.rotation.y += (e.clientX - lastX) * 0.008;
-    wire.rotation.x += (e.clientY - lastY) * 0.005;
-    lastX = e.clientX; lastY = e.clientY;
-  });
-  canvas.addEventListener('pointerup', () => isDown = false);
-
   const animate = () => {
     requestAnimationFrame(animate);
-    if(!isDown) wire.rotation.y += 0.0005;
+    wire.rotation.y += 0.0005;
     renderer.render(scene, camera);
     updateLabels();
   };
