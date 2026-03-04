@@ -7,7 +7,6 @@
   <style>
     *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
     
-    /* 1. 解決手機瀏覽器高度 Bug，使用 100% 確保不會溢出 */
     html, body {
       width: 100%; height: 100%; overflow: hidden; margin: 0; padding: 0;
     }
@@ -16,11 +15,10 @@
       background: #07070f;
     }
     
-    /* 2. 導入 100dvh (動態視窗高度)，完美適應有網址列的 Safari/Chrome */
     .phone {
       width: 100%; 
-      height: 100%; /* 舊瀏覽器備案 */
-      height: 100dvh; /* 新瀏覽器動態高度 */
+      height: 100%; 
+      height: 100dvh; 
       position: relative; overflow: hidden;
     }
 
@@ -52,15 +50,18 @@
     .g-text{font-size:14px;line-height:1.95;color:rgba(255,255,255,.7);letter-spacing:.25px;}
     .g-text p+p{margin-top:14px;}
     
-    /* 3. 底部區塊加入 safe-area-inset-bottom，保證按鈕不會被 iPhone 橫條或瀏覽器底欄遮擋 */
+    /* 改良後的柔和漸層底部區塊 */
     .g-bottom {
       position: absolute; bottom: 0; left: 0; right: 0; 
-      padding-top: 20px;
-      padding-bottom: calc(30px + env(safe-area-inset-bottom)); /* 動態安全距離 */
+      padding-top: 80px; /* 增加頂部 padding，讓漸層過渡的空間變大 */
+      padding-bottom: calc(30px + env(safe-area-inset-bottom)); 
       display: flex; justify-content: center; align-items: center;
-      background: linear-gradient(to top, #071a3a 80%, transparent);
+      /* 使用更細膩的三段式漸層，消除生硬的邊界線 */
+      background: linear-gradient(to top, #071a3a 10%, rgba(7, 26, 58, 0.6) 50%, transparent 100%);
       transition: opacity 0.4s ease, transform 0.4s ease;
       z-index: 20;
+      /* 關鍵 UX：讓漸層區塊不吃掉觸控，使用者可以隔著漸層滑動文字 */
+      pointer-events: none; 
     }
     .g-bottom.hide {
       opacity: 0;
@@ -74,6 +75,8 @@
       display: flex; align-items: center; justify-content: center;
       cursor: pointer; z-index: 10;
       transition: transform 0.2s;
+      /* 恢復按鈕本身的觸控功能，不受外層 pointer-events: none 影響 */
+      pointer-events: auto; 
     }
     .mini-orb:active { transform: scale(0.95); }
 
@@ -135,7 +138,6 @@
       50% { transform: rotate(180deg) scale(0.97); }
       100% { transform: rotate(0deg) scale(1); }
     }
-
 
     /* ═══════════════ SCREEN 2 — FULL-SCREEN SPHERE ═══════════════ */
     #sa{position:absolute;inset:0;transform:translateY(100%);transition:transform .65s cubic-bezier(.34,1.2,.64,1);z-index:30;} 
@@ -204,7 +206,6 @@
     .ans-sheet{
       position:absolute;bottom:0;left:0;right:0;
       height: 330px;
-      /* 確保面板也不會被 iPhone 橫條卡住內容 */
       padding-bottom: env(safe-area-inset-bottom);
       background:rgba(4,10,40,.97);
       backdrop-filter:blur(30px);
@@ -232,14 +233,12 @@
     .sheet-ans{font-size:13px;color:rgba(255,255,255,.72);line-height:1.82;letter-spacing:.18px;}
     .sheet-ans strong{color:rgba(79,195,247,.95);font-weight:600;}
 
-    /* Typing dots */
     .tdots{display:flex;gap:5px;padding:5px 0;}
     .td{width:5px;height:5px;border-radius:50%;background:rgba(79,195,247,.55);animation:tdAnim 1.3s ease-in-out infinite;}
     .td:nth-child(2){animation-delay:.18s;}
     .td:nth-child(3){animation-delay:.36s;}
     @keyframes tdAnim{0%,60%,100%{transform:translateY(0);opacity:.35}30%{transform:translateY(-6px);opacity:1}}
 
-    /* Follow-up */
     .follow-wrap{margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.05);}
     .follow-label{font-family:'Courier New',monospace;font-size:7.5px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.2);margin-bottom:8px;}
     .follow-btn{font-size:11.5px;color:rgba(79,195,247,.72);padding:8px 11px;margin-bottom:5px;border:1px solid rgba(79,195,247,.14);background:rgba(79,195,247,.04);cursor:pointer;display:block;width:100%;text-align:left;transition:all .18s;font-family:inherit;}
@@ -530,7 +529,8 @@ function initSphere(){
 
     if(!isDrag){
       velY*=0.90; velX*=0.90;
-      baseY+=0.0015+velY; baseX+=velX; 
+      /* 將基礎轉速調慢為 0.0005，實現緩慢旋轉的科技感 */
+      baseY+=0.0005+velY; baseX+=velX; 
       baseX=Math.max(-0.42,Math.min(0.42,baseX));
     }
     hoverX+=(mouseY*0.22-hoverX)*0.042;
