@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>浮世繪 AI 導覽</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+    /* 移除 body 的置中對齊，讓內容自然延展 */
+    body{font-family:-apple-system,'Noto Sans TC',BlinkMacSystemFont,'Helvetica Neue',sans-serif;background:#07070f;margin:0;padding:0;overflow:hidden;}
+    
+    /* 1. RWD 修改：將 phone 寬高設為 100vw 與 100vh，移除圓角與陰影 */
+    .phone{width:100vw;height:100vh;position:relative;overflow:hidden;}
+
+    /* ═══════════════ SCREEN 1 — AUDIO GUIDE ═══════════════ */
+    #sg{position:absolute;inset:0;background:linear-gradient(155deg,#0d1b4b 0%,#0a3060 45%,#0c4870 80%,#071a3a 100%);display:flex;flex-direction:column;}
+    .g-topbar{padding:50px 22px 14px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;}
+    .g-tag{font-size:10px;letter-spacing:2.5px;color:rgba(255,255,255,.35);text-transform:uppercase;}
+    .aw-nav{display:flex;align-items:center;gap:8px;}
+    .n-btn{width:30px;height:30px;border-radius:50%;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.07);color:rgba(255,255,255,.8);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s;}
+    .n-btn:active{background:rgba(255,255,255,.2);}
+    .aw-ct{font-size:11px;color:rgba(255,255,255,.35);}
+    .aw-card{margin:0 22px;border-radius:20px;overflow:hidden;height:195px;position:relative;flex-shrink:0;box-shadow:0 12px 40px rgba(0,0,0,.45);}
+    .aw-img{width:100%;height:100%;object-fit:cover;display:block;}
+    .aw-grad{position:absolute;inset:0;background:linear-gradient(to top,rgba(8,22,70,.92) 0%,rgba(8,22,70,.12) 55%,transparent 100%);}
+    .aw-info{position:absolute;bottom:14px;left:16px;right:16px;}
+    .aw-nm{font-size:19px;font-weight:700;color:#fff;letter-spacing:1px;line-height:1.25;text-shadow:0 2px 10px rgba(0,0,0,.5);}
+    .aw-mt{font-size:11px;color:rgba(255,255,255,.5);margin-top:3px;letter-spacing:.5px;}
+    .audio-pl{margin:14px 22px 0;padding:13px 16px;background:rgba(255,255,255,.07);backdrop-filter:blur(20px);border-radius:16px;border:1px solid rgba(255,255,255,.1);flex-shrink:0;}
+    .prog-track{height:3px;background:rgba(255,255,255,.12);border-radius:2px;margin-bottom:11px;cursor:pointer;}
+    .prog-fill{height:100%;background:linear-gradient(90deg,#4fc3f7,#81d4fa);border-radius:2px;width:0%;transition:width .15s linear;position:relative;}
+    .prog-fill::after{content:'';position:absolute;right:-4px;top:50%;transform:translateY(-50%);width:8px;height:8px;border-radius:50%;background:#81d4fa;box-shadow:0 0 8px rgba(129,212,250,.9);}
+    .audio-row{display:flex;align-items:center;gap:12px;}
+    .pl-btn{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#4fc3f7,#0288d1);border:none;color:#fff;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(79,195,247,.4);transition:transform .15s;}
+    .pl-btn:active{transform:scale(.93);}
+    .t-now{font-size:12px;color:rgba(255,255,255,.5);font-variant-numeric:tabular-nums;}
+    .t-tot{font-size:11px;color:rgba(255,255,255,.22);margin-left:auto;}
+    /* 讓內文區域在大螢幕上有最大寬度限制，閱讀體驗更好 */
+    .g-body{flex:1;overflow-y:auto;margin:14px auto 0;padding: 0 22px 130px; max-width: 600px; scrollbar-width:none;}
+    .g-body::-webkit-scrollbar{display:none;}
+    .g-text{font-size:14px;line-height:1.95;color:rgba(255,255,255,.7);letter-spacing:.25px;}
+    .g-text p+p{margin-top:14px;}
+    
+    .g-bottom {
+      position:absolute;bottom:0;left:0;right:0;padding:10px 0 46px;display:flex;justify-content:center;align-items:center;background:linear-gradient(to top,#071a3a 70%,transparent);
+      transition: opacity 0.4s ease, transform 0.4s ease;
+      z-index: 20;
+    }
+    .g-bottom.hide {
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(20px);
+    }
+
+    /* ═══════════════ 全新科技感 AI 液態核心按鈕 (縮小至70%) ═══════════════ */
+    .mini-orb {
+      width: 60px; height: 60px; position: relative; /* 原 86px */
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; z-index: 10;
+      transition: transform 0.2s;
+    }
+    .mini-orb:active { transform: scale(0.95); }
+
+    .mo-glow {
+      position: absolute; width: 105px; height: 105px; border-radius: 50%; /* 原 150px */
+      background: radial-gradient(circle, rgba(138, 43, 226, 0.4) 0%, rgba(0, 191, 255, 0.15) 45%, transparent 70%);
+      animation: pulseGlow 3s ease-in-out infinite alternate;
+      pointer-events: none;
+    }
+
+    .mo-core {
+      position: absolute; width: 46px; height: 46px; border-radius: 50%; /* 原 66px */
+      background: radial-gradient(circle at 35% 35%, #e0b0ff 0%, #a855f7 25%, #4338ca 65%, #1e1b4b 100%);
+      /* 陰影等比例減弱 */
+      box-shadow: inset -3px -3px 8px rgba(0,0,0,0.6), inset 4px 4px 10px rgba(255,255,255,0.7), 0 0 14px rgba(168, 85, 247, 0.5);
+      animation: morphCore 6s ease-in-out infinite alternate;
+    }
+
+    .mo-ring-1 {
+      position: absolute; width: 56px; height: 56px; /* 原 80px */
+      border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%;
+      border: 2px solid rgba(255,255,255,0.9); /* 線條變細 */
+      box-shadow: 0 0 8px #7dd3fc, inset 0 0 8px #7dd3fc;
+      animation: spinRing 4s linear infinite;
+      mix-blend-mode: screen; 
+    }
+
+    .mo-ring-2 {
+      position: absolute; width: 60px; height: 60px; /* 原 86px */
+      border-radius: 60% 40% 30% 70% / 50% 60% 40% 50%;
+      border: 2px solid rgba(192, 132, 252, 0.8);
+      box-shadow: 0 0 12px rgba(168, 85, 247, 0.8), inset 0 0 10px rgba(168, 85, 247, 0.5);
+      animation: spinRingReverse 6s linear infinite;
+      mix-blend-mode: screen;
+    }
+
+    .mo-highlight {
+      position: absolute; width: 46px; height: 46px; border-radius: 50%; /* 原 66px */
+      background: radial-gradient(circle at 50% 15%, rgba(255,255,255,0.6) 0%, transparent 35%);
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    @keyframes pulseGlow {
+      0% { transform: scale(0.9); opacity: 0.7; }
+      100% { transform: scale(1.1); opacity: 1; }
+    }
+    @keyframes morphCore {
+      0% { border-radius: 50%; transform: scale(1) rotate(0deg); }
+      50% { border-radius: 47% 53% 45% 55%; transform: scale(1.02) rotate(15deg); }
+      100% { border-radius: 53% 47% 55% 45%; transform: scale(0.98) rotate(-15deg); }
+    }
+    @keyframes spinRing {
+      0% { transform: rotate(0deg) scale(1); }
+      50% { transform: rotate(180deg) scale(1.03); }
+      100% { transform: rotate(360deg) scale(1); }
+    }
+    @keyframes spinRingReverse {
+      0% { transform: rotate(360deg) scale(1); }
+      50% { transform: rotate(180deg) scale(0.97); }
+      100% { transform: rotate(0deg) scale(1); }
+    }
+
+
+    /* ═══════════════ SCREEN 2 — FULL-SCREEN SPHERE ═══════════════ */
+    #sa{position:absolute;inset:0;transform:translateY(100%);transition:transform .65s cubic-bezier(.34,1.2,.64,1);z-index:30;} 
+    #sa.show{transform:translateY(0);}
+
+    /* Background layers */
+    .sa-bg{position:absolute;inset:0;background:radial-gradient(ellipse 90% 80% at 50% 44%,#0b1c4a 0%,#060a1c 50%,#030310 100%);}
+    .sa-grid{position:absolute;inset:0;pointer-events:none;background-image:linear-gradient(rgba(79,195,247,.022) 1px,transparent 1px),linear-gradient(90deg,rgba(79,195,247,.022) 1px,transparent 1px);background-size:30px 30px;}
+
+    /* Canvas occupies entire screen */
+    #orb-canvas{position:absolute;inset:0;width:100%;height:100%;cursor:grab;touch-action:none;z-index:5;}
+    #orb-canvas:active{cursor:grabbing;}
+
+    /* Floating topbar */
+    .sa-topbar{position:absolute;top:0;left:0;right:0;z-index:25;padding:50px 22px 0;display:flex;align-items:center;justify-content:space-between;pointer-events:none;}
+    .bk-btn{width:34px;height:34px;border-radius:50%;border:1px solid rgba(255,255,255,.15);background:rgba(6,12,40,.7);backdrop-filter:blur(14px);color:rgba(255,255,255,.65);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s;pointer-events:auto;}
+    .bk-btn:active{background:rgba(255,255,255,.14);}
+    .sa-badge{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:rgba(79,195,247,.7);background:rgba(6,12,40,.7);backdrop-filter:blur(14px);border:1px solid rgba(79,195,247,.22);padding:5px 12px;border-radius:20px;}
+
+    /* ── Question labels floating on sphere surface ── */
+    .q-labels-layer{position:absolute;inset:0;z-index:15;pointer-events:none;}
+
+    .q-label{
+      position:absolute;
+      transform:translate(-50%,-50%);
+      pointer-events:auto;
+      cursor:pointer;
+      transition:opacity .28s;
+      user-select:none;
+    }
+
+    .ql-pip{
+      position:absolute;
+      top:50%;left:50%;
+      transform:translate(-50%,-50%);
+      width:5px;height:5px;border-radius:50%;
+      background:rgba(79,195,247,.9);
+      box-shadow:0 0 7px rgba(79,195,247,.8);
+      z-index:2;
+      pointer-events:none;
+    }
+
+    .ql-box{
+      position:relative;
+      background:rgba(3,8,36,.84);
+      backdrop-filter:blur(16px);
+      border:1px solid rgba(79,195,247,.3);
+      padding:6px 11px 7px;
+      max-width:152px;
+      min-width:70px;
+    }
+    .ql-box::before{content:'';position:absolute;top:-1px;left:-1px;width:7px;height:7px;border-top:1.5px solid rgba(79,195,247,.8);border-left:1.5px solid rgba(79,195,247,.8);}
+    .ql-box::after{content:'';position:absolute;bottom:-1px;right:-1px;width:7px;height:7px;border-bottom:1.5px solid rgba(79,195,247,.8);border-right:1.5px solid rgba(79,195,247,.8);}
+    .ql-tr{position:absolute;top:-1px;right:-1px;width:7px;height:7px;border-top:1.5px solid rgba(79,195,247,.8);border-right:1.5px solid rgba(79,195,247,.8);}
+    .ql-bl{position:absolute;bottom:-1px;left:-1px;width:7px;height:7px;border-bottom:1.5px solid rgba(79,195,247,.8);border-left:1.5px solid rgba(79,195,247,.8);}
+
+    .ql-num{display:block;font-family:'Courier New',monospace;font-size:7px;letter-spacing:2.2px;color:rgba(79,195,247,.45);text-transform:uppercase;margin-bottom:3px;}
+    .ql-text{display:block;font-size:10.5px;color:rgba(255,255,255,.78);line-height:1.42;letter-spacing:.15px;}
+
+    /* Active label */
+    .q-label.active .ql-box{border-color:rgba(79,195,247,.85);box-shadow:0 0 22px rgba(79,195,247,.2);}
+    .q-label.active .ql-box::before,.q-label.active .ql-box::after{border-color:rgba(79,195,247,1);}
+    .q-label.active .ql-tr,.q-label.active .ql-bl{border-color:rgba(79,195,247,1);}
+    .q-label.active .ql-num{color:rgba(79,195,247,.9);}
+    .q-label.active .ql-text{color:#fff;}
+    .q-label.active .ql-pip{background:#4fc3f7;box-shadow:0 0 12px rgba(79,195,247,1);}
+
+    .sphere-hint{position:absolute;bottom:24px;left:0;right:0;text-align:center;font-family:'Courier New',monospace;font-size:7.5px;letter-spacing:2.8px;text-transform:uppercase;color:rgba(79,195,247,.15);z-index:10;pointer-events:none;}
+
+    /* ── Answer Bottom Sheet ── */
+    .ans-sheet{
+      position:absolute;bottom:0;left:0;right:0;
+      height:330px;
+      background:rgba(4,10,40,.97);
+      backdrop-filter:blur(30px);
+      -webkit-backdrop-filter:blur(30px);
+      border-top:1px solid rgba(79,195,247,.16);
+      border-radius:26px 26px 0 0;
+      transform:translateY(100%);
+      transition:transform .42s cubic-bezier(.34,1.1,.64,1);
+      z-index:40; 
+      display:flex;flex-direction:column;
+    }
+    .ans-sheet.open{transform:translateY(0);}
+
+    .sheet-top{flex-shrink:0;padding:14px 20px 11px;display:flex;align-items:center;justify-content:space-between;}
+    .sheet-handle{width:38px;height:3px;border-radius:2px;background:rgba(255,255,255,.15);}
+    .sheet-close{width:28px;height:28px;border-radius:50%;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:rgba(255,255,255,.4);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .18s;}
+    .sheet-close:active{background:rgba(255,255,255,.14);}
+
+    .sheet-body{flex:1;overflow-y:auto;padding:0 20px 28px;scrollbar-width:none;}
+    .sheet-body::-webkit-scrollbar{display:none;}
+
+    .sheet-eyebrow{font-family:'Courier New',monospace;font-size:8px;letter-spacing:2.5px;text-transform:uppercase;color:rgba(79,195,247,.5);margin-bottom:9px;}
+    .sheet-q{font-size:15.5px;font-weight:600;color:#fff;line-height:1.38;margin-bottom:14px;letter-spacing:.2px;}
+    .sheet-divider{height:1px;background:linear-gradient(90deg,rgba(79,195,247,.3) 0%,transparent 80%);margin-bottom:14px;}
+    .sheet-ans{font-size:13px;color:rgba(255,255,255,.72);line-height:1.82;letter-spacing:.18px;}
+    .sheet-ans strong{color:rgba(79,195,247,.95);font-weight:600;}
+
+    /* Typing dots */
+    .tdots{display:flex;gap:5px;padding:5px 0;}
+    .td{width:5px;height:5px;border-radius:50%;background:rgba(79,195,247,.55);animation:tdAnim 1.3s ease-in-out infinite;}
+    .td:nth-child(2){animation-delay:.18s;}
+    .td:nth-child(3){animation-delay:.36s;}
+    @keyframes tdAnim{0%,60%,100%{transform:translateY(0);opacity:.35}30%{transform:translateY(-6px);opacity:1}}
+
+    /* Follow-up */
+    .follow-wrap{margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.05);}
+    .follow-label{font-family:'Courier New',monospace;font-size:7.5px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.2);margin-bottom:8px;}
+    .follow-btn{font-size:11.5px;color:rgba(79,195,247,.72);padding:8px 11px;margin-bottom:5px;border:1px solid rgba(79,195,247,.14);background:rgba(79,195,247,.04);cursor:pointer;display:block;width:100%;text-align:left;transition:all .18s;font-family:inherit;}
+    .follow-btn:active{background:rgba(79,195,247,.13);color:#4fc3f7;}
+  </style>
+</head>
+<body>
+<div class="phone">
+
+  <div id="sg">
+    <div class="g-topbar">
+      <div class="g-tag">高雄浮世繪沈浸展</div>
+      <div class="aw-nav">
+        <button class="n-btn" onclick="changeAW(-1)">‹</button>
+        <span class="aw-ct" id="aw-ct">9 / 23</span>
+        <button class="n-btn" onclick="changeAW(1)">›</button>
+      </div>
+    </div>
+
+    <div class="aw-card" style="margin: 0 auto; width: calc(100% - 44px); max-width: 600px;">
+      <img class="aw-img" id="aw-img"
+        src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/0a/The_Great_Wave_off_Kanagawa.jpg/1280px-The_Great_Wave_off_Kanagawa.jpg" alt="" />
+      <div class="aw-grad"></div>
+      <div class="aw-info">
+        <div class="aw-nm" id="aw-nm">神奈川沖浪裏</div>
+        <div class="aw-mt" id="aw-mt">葛飾北齋｜1830年｜《冨嶽三十六景》系列</div>
+      </div>
+    </div>
+
+    <div class="audio-pl" style="margin: 14px auto 0; width: calc(100% - 44px); max-width: 600px;">
+      <div class="prog-track" onclick="scrubAudio(event)">
+        <div class="prog-fill" id="pf"></div>
+      </div>
+      <div class="audio-row">
+        <button class="pl-btn" id="pl-btn" onclick="togglePlay()">▶</button>
+        <span class="t-now" id="t-now">0:00</span>
+        <span class="t-tot">5:24</span>
+      </div>
+    </div>
+
+    <div class="g-body">
+      <div class="g-text">
+        <p>創作於1830年間的《神奈川沖浪裏》是一幅橫式畫作，初版寬約37.9公分，高約25.7公分，原版裡的署名也不是葛飾北齋，而是「北齋改為一筆」，喜歡改名的葛飾北齋，在創作《冨嶽三十六景》系列時，也先後改了幾次筆名，瀟灑個性在作品署名便可窺見一斑。</p>
+        <p>創作這幅舉世聞名的《神奈川沖浪裏》時，北齋正逢七十大關，此時的他人生境遇可謂坎坷谷底，妻子過世、孫兒好賭、家道中落，年老患病，最後和因離婚而返家的女兒遷居寺廟，勉強度日。</p>
+        <p>畫面中引人注目的大面積藍色運用，便是採用了當時從歐洲新傳入的顏料「普魯士藍」，這種顏料色彩鮮明且耐久，不易褪色，讓浮世繪能表現前所未有的鮮明藍調。北齋大膽疊印深淺不同的藍色，加強了浪峰的量感和立體感，使畫面更具視覺衝擊力。</p>
+        <p>年邁的葛飾北齋沒有喪失意志，依然精力充沛，接收著來自西方的新技術顏料，並運用在作品中。畫裡的驚濤駭浪彷彿暗喻著人生苦難無常，奮力求生的漁船眾人，和遠景中泰然自若的富士山，形成永恆自然與瞬息災難的深刻對比。</p>
+        <p>葛飾北齋在75歲時留下名言：「七十歲以前所作之畫皆無足觀；七十三歲時方悟得動植物之理。盼能活到百歲，當可臻化境，屆時每一筆每一點都將充滿生命。」</p>
+      </div>
+    </div>
+
+    <div class="g-bottom" id="g-bottom-orb">
+      <div class="mini-orb" onclick="showAI()">
+        <div class="mo-glow"></div>
+        <div class="mo-core"></div>
+        <div class="mo-ring-1"></div>
+        <div class="mo-ring-2"></div>
+        <div class="mo-highlight"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="sa">
+    <div class="sa-bg"></div>
+    <div class="sa-grid"></div>
+
+    <canvas id="orb-canvas"></canvas>
+
+    <div class="sa-topbar">
+      <button class="bk-btn" onclick="hideAI()">←</button>
+      <span class="sa-badge">神奈川 // AI 解析</span>
+    </div>
+
+    <div class="q-labels-layer" id="qlayer"></div>
+
+    <div class="sphere-hint">DRAG TO EXPLORE &nbsp;·&nbsp; TAP TO REVEAL</div>
+
+    <div class="ans-sheet" id="ans-sheet">
+      <div class="sheet-top">
+        <div class="sheet-handle"></div>
+        <button class="sheet-close" onclick="closeSheet()">✕</button>
+      </div>
+      <div class="sheet-body">
+        <div class="sheet-eyebrow" id="seyebrow">QUERY.00</div>
+        <div class="sheet-q" id="sheetq"></div>
+        <div class="sheet-divider"></div>
+        <div id="sheeta"></div>
+      </div>
+    </div>
+  </div>
+
+</div><script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+/* ─────────── DATA ─────────── */
+const artworks = [
+  { nm:'神奈川沖浪裏', mt:'葛飾北齋｜1830年｜《冨嶽三十六景》系列',
+    img:'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0a/The_Great_Wave_off_Kanagawa.jpg/1280px-The_Great_Wave_off_Kanagawa.jpg', idx:9 },
+  { nm:'凱風快晴', mt:'葛飾北齋｜1830年｜《冨嶽三十六景》系列',
+    img:'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/Red_Fuji_southern_wind_clear_morning.jpg/1280px-Red_Fuji_southern_wind_clear_morning.jpg', idx:4 },
+  { nm:'寛政三美人', mt:'喜多川歌麿｜1793年',
+    img:'https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/Kitagawa_Utamaro_-_Three_Celebrated_Beauties_%28Bijin_san_bijin%29_-_Google_Art_Project.jpg/637px-Kitagawa_Utamaro_-_Three_Celebrated_Beauties_%28Bijin_san_bijin%29_-_Google_Art_Project.jpg', idx:6 },
+];
+let curAW = 0;
+
+const questions = [
+  { q:'為什麼葛飾北齋會繪製這幅畫？', k:'q0' },
+  { q:'普魯士藍是什麼？為何影響這麼大？', k:'q1' },
+  { q:'畫中富士山代表什麼象徵意義？', k:'q2' },
+  { q:'這幅畫對西方藝術有什麼影響？', k:'q3' },
+  { q:'北齋一生改了幾次名字？', k:'q4' },
+  { q:'浪的形狀為什麼如此震撼人心？', k:'q5' },
+  { q:'畫中的漁船在哪裡？代表什麼？', k:'q6' },
+  { q:'這幅畫有多少個版本存在？', k:'q7' },
+  { q:'北齋的創作生涯橫跨多少年？', k:'q8' },
+  { q:'為什麼這幅畫成為日本文化的象徵？', k:'q9' },
+];
+
+const answers = {
+  q0:{ a:'北齋創作《神奈川沖浪裏》時，正值人生最艱困的時期——妻子過世、孫兒好賭、家道中落、年老患病，最後與女兒遷居寺廟。\n\n然而正是這種困境激發了他的創作能量。他相信：<strong>「七十歲以前所作之畫皆無足觀。」</strong> 畫中翻湧的巨浪，是他對人生苦難選擇奮力向前的精神寫照。', f:['北齋改了幾次名字？','北齋最後幾年的生活如何？'] },
+  q1:{ a:'<strong>普魯士藍（Prussian Blue）</strong>是18世紀初在德國偶然發現的人工顏料——史上第一種現代合成顏料。\n\n它在19世紀初傳入日本後，引發浮世繪界革命：色彩鮮明、耐久不褪色。北齋大膽疊印深淺不同的普魯士藍，開啟了浮世繪的<strong>「藍色時代」</strong>。', f:['普魯士藍如何影響印象派？'] },
+  q2:{ a:'在構圖中，富士山被置於遠景，顯得小而穩定，與前景巨浪形成強烈對比。\n\n富士山是日本人心目中<strong>永恆、不朽的象徵</strong>；翻湧的浪則代表人生的無常與苦難。對北齋而言，這也是對自身困境的一種隱喻——無論生命如何動盪，心中始終有一座永恆的富士山。', f:['《富嶽三十六景》共有幾幅？'] },
+  q3:{ a:'《神奈川沖浪裏》是19世紀末<strong>日本主義（Japonisme）</strong>浪潮的核心，深刻影響了：\n\n<strong>梵谷</strong>——收藏超過500幅浮世繪，構圖與色彩觀念深受影響。\n<strong>莫內</strong>——睡蓮系列的水面美學借鑒了浮世繪的平面色塊。\n<strong>德布西</strong>——管弦樂《海》的樂譜封面就是這幅畫。', f:['什麼是日本主義？'] },
+  q4:{ a:'北齋一生共更改了<strong>30多個名號</strong>，每次改名，他的畫風和技法也會跟著轉變。\n\n用過的名號包括：「畫狂老人」、「月癡老人」、「穿山甲」等，各種符合當時心境的有趣名字。從1805年開始，才正式號「葛飾北齋」。他還搬家超過90次！', f:['為何每次改名畫風也跟著變？'] },
+  q5:{ a:'畫中的浪採用了前所未見的<strong>不對稱弧形構圖</strong>，浪頭分裂成爪狀，彷彿要撲向觀者。\n\n北齋結合西方透視法與日本傳統美學：浪的弧線與遠景富士山的輪廓形成呼應，且浪的尺度遠大於現實，創造出震撼的<strong>視覺張力</strong>，使觀者彷彿置身其中。', f:['北齋如何學習西方透視法？'] },
+  q6:{ a:'仔細觀察畫面前景，可以看到<strong>三艘細長的木製漁船（押送船）</strong>，正在巨浪的衝擊下掙扎前行。\n\n船上的漁夫彎腰伏低，緊抓船身，代表<strong>渺小人類面對自然力量時的求生意志</strong>。這正是北齋自身生命困境的象徵——在無常的風浪中，依然奮力向前。', f:['當時的漁夫日常生活如何？'] },
+  q7:{ a:'由於木版印刷的技術，這幅畫被大量複製印刷，全球博物館收藏的版本<strong>超過100件</strong>，各版本有細微的顏色與版木差異。\n\n初版由北齋親自監製，使用昂貴普魯士藍，顏色較沉；後期版本顏色更鮮亮。大英博物館、大都會藝術博物館都有收藏。', f:['如何分辨初版和後期版本？'] },
+  q8:{ a:'北齋的創作生涯橫跨<strong>長達70年</strong>，從18歲出道直到90歲辭世，幾乎從未停筆。\n\n他一生創作了<strong>超過3萬件作品</strong>，涵蓋浮世繪、插圖、漫畫、繪本等各種形式。晚年的他仍持續探索，在86歲時寫道：「如果我能再活10年，就能真正領悟繪畫的真諦。」', f:['北齋晚年還有哪些代表作？'] },
+  q9:{ a:'《神奈川沖浪裏》成為日本文化象徵，原因是多方面的：\n\n它跨越了藝術與流行文化的界線，出現在貨幣、奧運海報、無數商品設計中。它以<strong>普通漁夫面對自然</strong>的視角，傳達出日本文化中對自然的敬畏與人的渺小感，使它成為<strong>全球最被認可的日本文化符號之一</strong>。', f:['浮世繪如何影響當代設計？'] },
+};
+
+/* ─────────── SCREEN 1: AUDIO ─────────── */
+let playing=false, t=0, dur=324, ticker;
+function togglePlay(){
+  playing=!playing;
+  document.getElementById('pl-btn').textContent=playing?'⏸':'▶';
+  if(playing){ ticker=setInterval(()=>{ if(++t>=dur){ clearInterval(ticker);playing=false;document.getElementById('pl-btn').textContent='▶';setTimeout(showAI,700); } updateAudio(); },1000); }
+  else clearInterval(ticker);
+}
+function updateAudio(){
+  const m=Math.floor(t/60),s=t%60;
+  document.getElementById('t-now').textContent=`${m}:${String(s).padStart(2,'0')}`;
+  document.getElementById('pf').style.width=`${(t/dur)*100}%`;
+}
+function scrubAudio(e){ const r=e.currentTarget.getBoundingClientRect(); t=Math.floor(((e.clientX-r.left)/r.width)*dur); updateAudio(); }
+function changeAW(d){
+  curAW=(curAW+d+artworks.length)%artworks.length;
+  const a=artworks[curAW];
+  document.getElementById('aw-img').src=a.img;
+  document.getElementById('aw-nm').textContent=a.nm;
+  document.getElementById('aw-mt').textContent=a.mt;
+  document.getElementById('aw-ct').textContent=`${a.idx} / 23`;
+  t=0;playing=false;clearInterval(ticker);
+  document.getElementById('pl-btn').textContent='▶'; updateAudio();
+}
+
+/* ─────────── SCREEN TRANSITIONS ─────────── */
+function showAI(){ 
+  clearInterval(ticker); 
+  document.getElementById('sa').classList.add('show'); 
+  document.getElementById('g-bottom-orb').classList.add('hide'); 
+  initSphere(); 
+}
+function hideAI(){ 
+  document.getElementById('sa').classList.remove('show'); 
+  document.getElementById('g-bottom-orb').classList.remove('hide'); 
+  closeSheet(); 
+}
+
+/* ─────────── THREE.JS SPHERE (RWD 動態寬高支援) ─────────── */
+// 將原本固定的 390x844 改為讀取視窗大小
+let PW = window.innerWidth, PH = window.innerHeight;
+let renderer, scene, camera, wire;
+let baseY=0, baseX=0, velY=0, velX=0;
+let isDrag=false, lastPX=0, lastPY=0;
+let mouseX=0, mouseY=0, hoverX=0, hoverY=0;
+let sphereInited=false, activeQ=-1;
+let qLabelEls=[], sheetTyper=null;
+
+const SPHRAD = 1.25;
+const anchors = (()=>{
+  const pts=[];
+  for(let i=0;i<10;i++){
+    const phi=Math.acos(1-2*(i+0.5)/10);
+    const theta=Math.PI*(1+Math.sqrt(5))*i + 0.4;
+    pts.push(new THREE.Vector3(
+      Math.sin(phi)*Math.cos(theta),
+      Math.cos(phi),
+      Math.sin(phi)*Math.sin(theta)
+    ).multiplyScalar(SPHRAD));
+  }
+  return pts;
+})();
+
+const SPHERE_Y = 0.28;
+
+function initSphere(){
+  if(sphereInited) return;
+  sphereInited=true;
+
+  const canvas=document.getElementById('orb-canvas');
+  canvas.width=PW; canvas.height=PH;
+
+  renderer=new THREE.WebGLRenderer({canvas, alpha:true, antialias:true});
+  renderer.setSize(PW, PH, false);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setClearColor(0,0);
+
+  scene=new THREE.Scene();
+  camera=new THREE.PerspectiveCamera(58, PW/PH, 0.1, 100);
+  camera.position.set(0, 0, 3.9);
+  camera.lookAt(0, SPHERE_Y, 0);
+
+  // 監聽視窗縮放事件，讓 3D 場景自動適應 RWD
+  window.addEventListener('resize', () => {
+    PW = window.innerWidth;
+    PH = window.innerHeight;
+    if(camera && renderer) {
+      camera.aspect = PW / PH;
+      camera.updateProjectionMatrix();
+      renderer.setSize(PW, PH, false);
+    }
+  });
+
+  const geo=new THREE.IcosahedronGeometry(SPHRAD, 3);
+  const edges=new THREE.EdgesGeometry(geo);
+  wire=new THREE.LineSegments(edges,
+    new THREE.LineBasicMaterial({color:0x4fc3f7, transparent:true, opacity:0.28}));
+  wire.position.y=SPHERE_Y;
+  scene.add(wire);
+
+  const innerMesh=new THREE.Mesh(
+    new THREE.SphereGeometry(SPHRAD*0.96, 32, 32),
+    new THREE.MeshBasicMaterial({color:0x060e30, transparent:true, opacity:0.6}));
+  innerMesh.position.y=SPHERE_Y;
+  scene.add(innerMesh);
+
+  const traceColors=[0x7c4dff, 0x00bcd4, 0x4fc3f7];
+  for(let ti=0;ti<3;ti++){
+    const pts=[];
+    for(let p=0;p<22;p++){
+      const th2=Math.random()*Math.PI*2, ph2=Math.acos(2*Math.random()-1);
+      pts.push(new THREE.Vector3(
+        SPHRAD*Math.sin(ph2)*Math.cos(th2),
+        SPHRAD*Math.cos(ph2),
+        SPHRAD*Math.sin(ph2)*Math.sin(th2)));
+    }
+    const curve=new THREE.CatmullRomCurve3(pts,true);
+    const tLine=new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints(curve.getPoints(110)),
+      new THREE.LineBasicMaterial({color:traceColors[ti], transparent:true, opacity:0.15}));
+    tLine.position.y=SPHERE_Y;
+    tLine.userData.isTrace=true;
+    scene.add(tLine);
+  }
+
+  const layer=document.getElementById('qlayer');
+  qLabelEls=[];
+  questions.forEach((q,i)=>{
+    const el=document.createElement('div');
+    el.className='q-label';
+    el.style.cssText='opacity:0;pointer-events:none;';
+    el.innerHTML=
+      `<div class="ql-pip"></div>`+
+      `<div class="ql-box">`+
+        `<span class="ql-tr"></span><span class="ql-bl"></span>`+
+        `<span class="ql-num">Q.${String(i).padStart(2,'0')}</span>`+
+        `<span class="ql-text">${q.q}</span>`+
+      `</div>`;
+    el.addEventListener('click',()=>openSheet(i));
+    layer.appendChild(el);
+    qLabelEls.push(el);
+  });
+
+  canvas.addEventListener('pointerdown',e=>{
+    isDrag=true; lastPX=e.clientX; lastPY=e.clientY; velX=velY=0;
+    canvas.setPointerCapture(e.pointerId);
+  });
+  canvas.addEventListener('pointermove',e=>{
+    const rect=canvas.getBoundingClientRect();
+    mouseX=(e.clientX-rect.left-PW/2)/PW;
+    mouseY=(e.clientY-rect.top-PH/2)/PH;
+    if(!isDrag) return;
+    const dx=e.clientX-lastPX, dy=e.clientY-lastPY;
+    velY=dx*0.008; velX=dy*0.005; 
+    baseY+=velY; baseX+=velX;
+    lastPX=e.clientX; lastPY=e.clientY;
+  });
+  canvas.addEventListener('pointerup',()=>{ isDrag=false; });
+  canvas.addEventListener('pointercancel',()=>{ isDrag=false; });
+
+  (function animate(){
+    requestAnimationFrame(animate);
+
+    if(!isDrag){
+      velY*=0.90; velX*=0.90;
+      baseY+=0.0005+velY; baseX+=velX; 
+      baseX=Math.max(-0.42,Math.min(0.42,baseX));
+    }
+    hoverX+=(mouseY*0.22-hoverX)*0.042;
+    hoverY+=(mouseX*0.15-hoverY)*0.042;
+
+    const ry=baseY+hoverY, rx=baseX+hoverX;
+    wire.rotation.set(rx, ry, 0);
+
+    scene.children.forEach(c=>{
+      if(c.userData&&c.userData.isTrace){
+        c.rotation.set(rx*0.45, ry*0.38, 0);
+      }
+    });
+
+    renderer.render(scene, camera);
+    updateLabels(); 
+  })();
+}
+
+const _v3=new THREE.Vector3(), _euler=new THREE.Euler();
+
+function updateLabels(){
+  const sheetH = document.getElementById('ans-sheet').classList.contains('open') ? 340 : 0;
+  const maxY = PH - sheetH - 20;
+
+  _euler.set(wire.rotation.x, wire.rotation.y, 0, 'XYZ');
+  const sphereCenter=new THREE.Vector3(0, SPHERE_Y, 0);
+
+  anchors.forEach((anchor, i)=>{
+    const worldPos=anchor.clone().applyEuler(_euler).add(sphereCenter);
+    const normal=worldPos.clone().sub(sphereCenter).normalize();
+    const toCam=camera.position.clone().sub(worldPos).normalize();
+    const dot=normal.dot(toCam);
+
+    const el=qLabelEls[i];
+    if(dot<-0.02){
+      el.style.opacity='0';
+      el.style.pointerEvents='none';
+      return;
+    }
+
+    _v3.copy(worldPos).project(camera);
+    const sx=(_v3.x+1)/2*PW;
+    const sy=-(_v3.y-1)/2*PH;
+
+    if(sx<12 || sx>PW-12 || sy<92 || sy>maxY){
+      el.style.opacity='0';
+      el.style.pointerEvents='none';
+      return;
+    }
+
+    const fade=Math.min(1, (dot+0.02)/0.55);
+    const isActive=activeQ===i;
+
+    el.style.left=sx+'px';
+    el.style.top=sy+'px';
+    el.style.opacity=(isActive ? 1 : fade*0.82).toString();
+    el.style.pointerEvents='auto';
+    el.classList.toggle('active', isActive);
+  });
+}
+
+function openSheet(idx){
+  activeQ=idx;
+  const q=questions[idx];
+  document.getElementById('seyebrow').textContent=`QUERY.${String(idx).padStart(2,'0')} · AI 解析`;
+  document.getElementById('sheetq').textContent=q.q;
+  document.getElementById('sheeta').innerHTML='<div class="tdots"><div class="td"></div><div class="td"></div><div class="td"></div></div>';
+  document.getElementById('ans-sheet').classList.add('open');
+
+  clearTimeout(sheetTyper);
+  sheetTyper=setTimeout(()=>{
+    const ans=answers[q.k]||{a:'北齋的精神令人動容，歡迎繼續探索更多作品。',f:[]};
+    let html=`<div class="sheet-ans">${ans.a.replace(/\n/g,'<br>')}</div>`;
+    if(ans.f&&ans.f.length){
+      html+=`<div class="follow-wrap"><div class="follow-label">// 延伸探索</div>`;
+      ans.f.forEach(fq=>{
+        const fi=questions.findIndex(x=>x.q===fq);
+        html+=`<button class="follow-btn" onclick="openSheet(${fi>=0?fi:idx})">${fq}</button>`;
+      });
+      html+=`</div>`;
+    }
+    document.getElementById('sheeta').innerHTML=html;
+  }, 1200);
+}
+
+function closeSheet(){
+  document.getElementById('ans-sheet').classList.remove('open');
+  activeQ=-1;
+}
+</script>
+</body>
+</html>
