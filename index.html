@@ -236,7 +236,7 @@ function changeAW(d){
 // ==========================================
 async function fetchGeminiAnswer(questionText) {
   const curArt = artworks[curAW] || { nm: '', desc: '' };
-  const prompt = `你現在是專業導覽員。觀眾正在看展品《${curArt.nm}》。背景：${curArt.desc}。提問：「${questionText}」。請用繁體中文、口語親切地回答(150字內)，結尾加上「//延伸問題一//延伸問題二」。`;
+  const prompt = `你現在是專業導覽員。觀眾正在看展品《${curArt.nm}》。背景：${curArt.desc}。提問：「${questionText}」。請用繁體中文、口語親切地回答(150字內)。回答完畢後，請務必根據展品內容，另外生成兩個讓觀眾可以繼續深入了解的「延伸提問」，並嚴格使用「//」作為分隔符號。格式範例：(你的回答內容)//(延伸問題一)//(延伸問題二`;
 
   try {
     const response = await fetch(WORKER_URL, {
