@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>浮世繪 AI 導覽</title>
+  <title> AI黛尼看 浮世繪 導覽</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <style>
@@ -181,7 +181,7 @@ function changeAW(d){
   document.getElementById('aw-ct').textContent = `${curAW + 1} / ${artworks.length}`;
   document.getElementById('g-text-container').innerHTML = a.desc.split('\n').filter(p => p.trim()).map(p => `<p>${p}</p>`).join('');
   
-  if(qLabelEls.length > 0) qLabelEls.forEach(el => el.querySelector('.ql-text').textContent = "黛尼解析中...");
+  if(qLabelEls.length > 0) qLabelEls.forEach(el => el.querySelector('.ql-text').textContent = "AI黛尼解析中...");
 
   currentAudio.pause(); currentAudio.src = a.audio; currentAudio.load(); isPlaying = false;
   document.getElementById('pl-btn').textContent = '▶'; document.getElementById('pf').style.width = '0%';
@@ -218,7 +218,7 @@ async function preloadPartQuestions(artIndex) {
     let qs = text.split('\n').map(q => q.replace(/^[\d\.、\-*\s]+/, '').trim()).filter(q => q);
     
     // 預填剩下 7 個占位符
-    curArt.dynamicQs = [...qs.slice(0,3), ...Array(7).fill("黛尼持續解析中...")];
+    curArt.dynamicQs = [...qs.slice(0,3), ...Array(7).fill("AI黛尼持續解析中...")];
     curArt.isFetching = false;
     if (curAW === artIndex) updateQuestionLabels(curArt.dynamicQs);
     
@@ -226,7 +226,7 @@ async function preloadPartQuestions(artIndex) {
     if (document.getElementById('sa').classList.contains('show')) preloadFullRemainder(artIndex);
   } catch (err) {
     curArt.isFetching = false;
-    if (curAW === artIndex) updateQuestionLabels(Array(NUM_Q).fill(err.message === "429" ? "API忙碌中" : "解析失敗"));
+    if (curAW === artIndex) updateQuestionLabels(Array(NUM_Q).fill(err.message === "429" ? "AI黛尼忙碌中..." : "解析失敗"));
   }
 }
 
@@ -310,7 +310,7 @@ function initSphere(){
   const layer = document.getElementById('qlayer');
   for(let i=0; i<NUM_Q; i++){
     const el = document.createElement('div'); el.className='q-label'; 
-    el.innerHTML=`<div class="ql-pip"></div><div class="ql-box"><span class="ql-num">Q.${String(i+1).padStart(2,'0')}</span><span class="ql-text">黛尼解析中...</span></div>`;
+    el.innerHTML=`<div class="ql-pip"></div><div class="ql-box"><span class="ql-num">Q.${String(i+1).padStart(2,'0')}</span><span class="ql-text">AI黛尼解析中...</span></div>`;
     el.querySelector('.ql-box').addEventListener('click', () => {
       const text = el.querySelector('.ql-text').textContent;
       if(text.includes('中') || text.includes('失敗')) return;
