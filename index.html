@@ -399,7 +399,7 @@ function initSphere(){
 
   (function animate(){
     requestAnimationFrame(animate);
-    if(!isDrag){ baseY+=0.0005; baseX=Math.max(-0.42,Math.min(0.42,baseX)); }
+    if(!isDrag){ baseY+=0.00025; baseX=Math.max(-0.42,Math.min(0.42,baseX)); }
     wire.rotation.set(baseX, baseY, 0);
     renderer.render(scene, camera);
     updateLabels(); 
