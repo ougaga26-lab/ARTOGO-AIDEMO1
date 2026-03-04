@@ -7,131 +7,134 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <style>
+    /* 基礎重置 */
     *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
     html, body { width: 100%; height: 100%; overflow: hidden; margin: 0; padding: 0; }
     body { font-family: -apple-system, 'Noto Sans TC', BlinkMacSystemFont, 'Helvetica Neue', sans-serif; background: #07070f; }
-    .phone { width: 100%; height: 100dvh; position: relative; overflow: hidden; }
+    
+    /* 100dvh 解決手機工具列遮擋問題 */
+    .phone { width: 100%; height: 100%; height: 100dvh; position: relative; overflow: hidden; }
 
-    /* ═══════════════ SCREEN 1 — AUDIO GUIDE ═══════════════ */
+    /* ═══════════════ 第一頁：導覽介面 ═══════════════ */
     #sg{position:absolute;inset:0;background:linear-gradient(155deg,#0d1b4b 0%,#0a3060 45%,#0c4870 80%,#071a3a 100%);display:flex;flex-direction:column;}
     
-    /* 2. 移除頂部標題與壓縮空間 */
-    .g-topbar{padding:15px 22px 10px;display:flex;justify-content:flex-end;align-items:center;flex-shrink:0;}
-    .aw-nav{display:flex;align-items:center;gap:8px;}
-    .n-btn{width:30px;height:30px;border-radius:50%;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.07);color:rgba(255,255,255,.8);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s;}
-    .aw-ct{font-size:11px;color:rgba(255,255,255,.35);min-width: 40px; text-align: center;}
+    /* 頂部導覽列：移除標題，按鈕靠右 */
+    .g-topbar{padding:15px 22px 10px; display:flex; justify-content:flex-end; align-items:center; flex-shrink:0;}
+    .aw-nav{display:flex; align-items:center; gap:8px;}
+    .n-btn{width:32px; height:32px; border-radius:50%; border:1px solid rgba(255,255,255,.18); background:rgba(255,255,255,.07); color:rgba(255,255,255,.8); font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background .2s;}
+    .n-btn:active{background:rgba(255,255,255,.25);}
+    .aw-ct{font-size:12px; color:rgba(255,255,255,.35); min-width: 40px; text-align: center; letter-spacing: 1px;}
 
-    /* 1. 正方形圖片區域與模糊背壓效果 */
+    /* 正方形圖片區域：含模糊背景 */
     .aw-card{
         margin:0 auto; width: calc(100% - 44px); max-width: 500px; 
-        aspect-ratio: 1/1; /* 強制正方形 */
-        border-radius:20px; overflow:hidden; position:relative; flex-shrink:0;
-        box-shadow:0 12px 40px rgba(0,0,0,.45); background: #000;
+        aspect-ratio: 1/1; 
+        border-radius:24px; overflow:hidden; position:relative; flex-shrink:0;
+        box-shadow:0 20px 50px rgba(0,0,0,0.5); background: #000;
     }
     .aw-img-blur {
-        position: absolute; inset: 0;
-        width: 100%; height: 100%;
-        object-fit: cover;
-        filter: blur(20px) brightness(0.6); /* 霧化壓底 */
-        transform: scale(1.1); /* 防止邊緣露出 */
+        position: absolute; inset: 0; width: 100%; height: 100%;
+        object-fit: cover; filter: blur(30px) brightness(0.5); transform: scale(1.2);
     }
-    .aw-img{
-        position: relative; width:100%; height:100%;
-        object-fit:contain; /* 確保圖片不被裁切 */
-        z-index: 1;
-    }
-    .aw-grad{position:absolute;inset:0;background:linear-gradient(to top,rgba(8,22,70,.8) 0%, transparent 40%); z-index: 2;}
-    .aw-info{position:absolute;bottom:14px;left:16px;right:16px; z-index: 3;}
-    .aw-nm{font-size:19px;font-weight:700;color:#fff;letter-spacing:1px;line-height:1.25;text-shadow:0 2px 10px rgba(0,0,0,.5);}
+    .aw-img{ position: relative; width:100%; height:100%; object-fit:contain; z-index: 1; }
+    .aw-grad{position:absolute;inset:0;background:linear-gradient(to top,rgba(8,22,70,0.85) 0%, transparent 40%); z-index: 2;}
+    .aw-info{position:absolute;bottom:18px;left:20px;right:20px; z-index: 3;}
+    .aw-nm{font-size:22px; font-weight:700; color:#fff; letter-spacing:1px; text-shadow:0 2px 15px rgba(0,0,0,0.6);}
 
-    /* 3. 播放器列壓縮：進度條與按鈕同行 */
+    /* 播放器：進度條與按鈕同行 */
     .audio-pl{
-        margin:12px auto 0; width: calc(100% - 44px); max-width: 500px; 
-        padding:10px 16px; background:rgba(255,255,255,.07); backdrop-filter:blur(20px);
-        border-radius:16px; border:1px solid rgba(255,255,255,.1); flex-shrink:0;
-        display: flex; align-items: center; gap: 12px;
+        margin:14px auto 0; width: calc(100% - 44px); max-width: 500px; 
+        padding:12px 18px; background:rgba(255,255,255,.07); backdrop-filter:blur(25px);
+        border-radius:18px; border:1px solid rgba(255,255,255,.1); flex-shrink:0;
+        display: flex; align-items: center; gap: 15px;
     }
-    .prog-area { flex: 1; display: flex; flex-direction: column; gap: 4px; }
-    .prog-track{height:3px;background:rgba(255,255,255,.12);border-radius:2px;cursor:pointer; position: relative;}
-    .prog-fill{height:100%;background:linear-gradient(90deg,#4fc3f7,#81d4fa);border-radius:2px;width:0%;position:relative; pointer-events: none;}
-    .prog-fill::after{content:'';position:absolute;right:-4px;top:50%;transform:translateY(-50%);width:8px;height:8px;border-radius:50%;background:#81d4fa;box-shadow:0 0 8px rgba(129,212,250,.9);}
-    .time-row { display: flex; justify-content: space-between; font-size: 10px; color: rgba(255,255,255,.3); font-variant-numeric: tabular-nums; }
+    .prog-area { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+    .prog-track{height:4px; background:rgba(255,255,255,.12); border-radius:2px; cursor:pointer; position: relative;}
+    .prog-fill{height:100%; background:linear-gradient(90deg,#4fc3f7,#81d4fa); border-radius:2px; width:0%; position:relative; pointer-events: none;}
+    .prog-fill::after{content:''; position:absolute; right:-4px; top:50%; transform:translateY(-50%); width:10px; height:10px; border-radius:50%; background:#81d4fa; box-shadow:0 0 10px rgba(129,212,250,1);}
+    .time-row { display: flex; justify-content: space-between; font-size: 11px; color: rgba(255,255,255,.3); font-variant-numeric: tabular-nums; }
     
     .pl-btn{
-        width:36px; height:36px; border-radius:50%; 
+        width:42px; height:42px; border-radius:50%; 
         background:linear-gradient(135deg,#4fc3f7,#0288d1); border:none; color:#fff; 
-        font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center; 
-        box-shadow:0 4px 16px rgba(79,195,247,.4); flex-shrink: 0;
+        font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center; 
+        box-shadow:0 4px 20px rgba(79,195,247,.4); flex-shrink: 0; transition: transform 0.1s;
     }
+    .pl-btn:active { transform: scale(0.9); }
 
-    .g-body{flex:1;overflow-y:auto;margin:10px auto 0;padding: 0 22px 130px; max-width: 600px; scrollbar-width:none;}
+    /* 導覽文字區 */
+    .g-body{flex:1; overflow-y:auto; margin:12px auto 0; padding: 0 22px 140px; max-width: 600px; scrollbar-width:none;}
     .g-body::-webkit-scrollbar{display:none;}
-    .g-text{font-size:14px;line-height:1.9;color:rgba(255,255,255,.7);letter-spacing:.25px;}
-    .g-text p{margin-bottom:12px;}
+    .g-text{font-size:15px; line-height:1.95; color:rgba(255,255,255,.75); letter-spacing:.3px; text-align: justify;}
+    .g-text p{margin-bottom:16px;}
     
+    /* 底部柔和漸層與 AI 按鈕 (70%) */
     .g-bottom {
-      position: absolute; bottom: 0; left: 0; right: 0; padding-top: 60px; padding-bottom: calc(20px + env(safe-area-inset-bottom)); 
+      position: absolute; bottom: 0; left: 0; right: 0; 
+      padding-top: 100px; padding-bottom: calc(25px + env(safe-area-inset-bottom)); 
       display: flex; justify-content: center; align-items: center;
-      background: linear-gradient(to top, #071a3a 20%, transparent 100%);
+      background: linear-gradient(to top, #071a3a 15%, rgba(7, 26, 58, 0.6) 55%, transparent 100%);
       transition: opacity 0.4s ease, transform 0.4s ease; z-index: 20; pointer-events: none; 
     }
-    .g-bottom.hide { opacity: 0; pointer-events: none; transform: translateY(20px); }
+    .g-bottom.hide { opacity: 0; pointer-events: none; transform: translateY(30px); }
 
-    /* AI 按鈕樣式 (70%) */
     .mini-orb { width: 60px; height: 60px; position: relative; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 10; transition: transform 0.2s; pointer-events: auto; }
-    .mo-glow { position: absolute; width: 100px; height: 100px; border-radius: 50%; background: radial-gradient(circle, rgba(138, 43, 226, 0.4) 0%, rgba(0, 191, 255, 0.15) 45%, transparent 70%); animation: pulseGlow 3s ease-in-out infinite alternate; pointer-events: none; }
+    .mo-glow { position: absolute; width: 100px; height: 100px; border-radius: 50%; background: radial-gradient(circle, rgba(79, 195, 247, 0.3) 0%, rgba(138, 43, 226, 0.1) 45%, transparent 70%); animation: pulseGlow 3s ease-in-out infinite alternate; pointer-events: none; }
     .mo-core { position: absolute; width: 42px; height: 42px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #e0b0ff 0%, #a855f7 25%, #4338ca 65%, #1e1b4b 100%); box-shadow: inset -3px -3px 8px rgba(0,0,0,0.6), inset 4px 4px 10px rgba(255,255,255,0.7), 0 0 14px rgba(168, 85, 247, 0.5); animation: morphCore 6s ease-in-out infinite alternate; }
-    .mo-ring-1 { position: absolute; width: 56px; height: 56px; border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%; border: 2px solid rgba(255,255,255,0.9); box-shadow: 0 0 8px #7dd3fc, inset 0 0 8px #7dd3fc; animation: spinRing 4s linear infinite; mix-blend-mode: screen; }
-    .mo-ring-2 { position: absolute; width: 60px; height: 60px; border-radius: 60% 40% 30% 70% / 50% 60% 40% 50%; border: 2px solid rgba(192, 132, 252, 0.8); box-shadow: 0 0 12px rgba(168, 85, 247, 0.8), inset 0 0 10px rgba(168, 85, 247, 0.5); animation: spinRingReverse 6s linear infinite; mix-blend-mode: screen; }
-    .mo-highlight { position: absolute; width: 42px; height: 42px; border-radius: 50%; background: radial-gradient(circle at 50% 15%, rgba(255,255,255,0.6) 0%, transparent 35%); pointer-events: none; z-index: 2; }
+    .mo-ring-1 { position: absolute; width: 56px; height: 56px; border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%; border: 2px solid rgba(255,255,255,0.8); box-shadow: 0 0 8px #7dd3fc, inset 0 0 8px #7dd3fc; animation: spinRing 4s linear infinite; mix-blend-mode: screen; }
+    .mo-ring-2 { position: absolute; width: 60px; height: 60px; border-radius: 60% 40% 30% 70% / 50% 60% 40% 50%; border: 2px solid rgba(192, 132, 252, 0.6); box-shadow: 0 0 12px rgba(168, 85, 247, 0.6), inset 0 0 10px rgba(168, 85, 247, 0.4); animation: spinRingReverse 6s linear infinite; mix-blend-mode: screen; }
+    .mo-highlight { position: absolute; width: 42px; height: 42px; border-radius: 50%; background: radial-gradient(circle at 50% 15%, rgba(255,255,255,0.5) 0%, transparent 35%); pointer-events: none; z-index: 2; }
     @keyframes pulseGlow { 0% { transform: scale(0.9); opacity: 0.7; } 100% { transform: scale(1.1); opacity: 1; } }
     @keyframes morphCore { 0% { border-radius: 50%; transform: scale(1) rotate(0deg); } 50% { border-radius: 47% 53% 45% 55%; transform: scale(1.02) rotate(15deg); } 100% { border-radius: 53% 47% 55% 45%; transform: scale(0.98) rotate(-15deg); } }
     @keyframes spinRing { 0% { transform: rotate(0deg) scale(1); } 50% { transform: rotate(180deg) scale(1.03); } 100% { transform: rotate(360deg) scale(1); } }
     @keyframes spinRingReverse { 0% { transform: rotate(360deg) scale(1); } 50% { transform: rotate(180deg) scale(0.97); } 100% { transform: rotate(0deg) scale(1); } }
 
-    /* ═══════════════ SCREEN 2 — FULL-SCREEN SPHERE ═══════════════ */
+    /* ═══════════════ 第二頁：AI 3D 解析 ═══════════════ */
     #sa{position:absolute;inset:0;transform:translateY(100%);transition:transform .65s cubic-bezier(.34,1.2,.64,1);z-index:30;} 
     #sa.show{transform:translateY(0);}
     .sa-bg{position:absolute;inset:0;background:radial-gradient(ellipse 90% 80% at 50% 44%,#0b1c4a 0%,#060a1c 50%,#030310 100%);}
-    .sa-grid{position:absolute;inset:0;pointer-events:none;background-image:linear-gradient(rgba(79,195,247,.022) 1px,transparent 1px),linear-gradient(90deg,rgba(79,195,247,.022) 1px,transparent 1px);background-size:30px 30px;}
+    .sa-grid{position:absolute;inset:0;pointer-events:none;background-image:linear-gradient(rgba(79,195,247,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(79,195,247,.025) 1px,transparent 1px);background-size:30px 30px;}
     #orb-canvas{position:absolute;inset:0;width:100%;height:100%;cursor:grab;touch-action:none;z-index:5;}
+    
     .sa-topbar{position:absolute;top:0;left:0;right:0;z-index:25;padding:50px 22px 0;display:flex;align-items:center;justify-content:space-between;pointer-events:none;}
-    .bk-btn{width:34px;height:34px;border-radius:50%;border:1px solid rgba(255,255,255,.15);background:rgba(6,12,40,.7);backdrop-filter:blur(14px);color:rgba(255,255,255,.65);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s;pointer-events:auto;}
-    .sa-badge{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:rgba(79,195,247,.7);background:rgba(6,12,40,.7);backdrop-filter:blur(14px);border:1px solid rgba(79,195,247,.22);padding:5px 12px;border-radius:20px;}
+    .bk-btn{width:36px; height:36px; border-radius:50%; border:1px solid rgba(255,255,255,.15); background:rgba(6,12,40,.7); backdrop-filter:blur(14px); color:rgba(255,255,255,.65); font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center; pointer-events:auto;}
+    .sa-badge{font-size:9px; letter-spacing:2px; text-transform:uppercase; color:rgba(79,195,247,.8); background:rgba(6,12,40,.7); backdrop-filter:blur(14px); border:1px solid rgba(79,195,247,.25); padding:6px 14px; border-radius:20px;}
     
     .q-labels-layer{position:absolute;inset:0;z-index:15;pointer-events:none;}
-    .q-label{position:absolute;transform:translate(-50%,-50%);pointer-events:auto;cursor:pointer;transition:opacity .28s;user-select:none;}
-    .ql-pip{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:5px;height:5px;border-radius:50%;background:rgba(79,195,247,.9);box-shadow:0 0 7px rgba(79,195,247,.8);z-index:2;pointer-events:none;}
-    .ql-box{position:relative;background:rgba(3,8,36,.84);backdrop-filter:blur(16px);border:1px solid rgba(79,195,247,.3);padding:6px 11px 7px;max-width:152px;min-width:70px;}
-    .ql-box::before{content:'';position:absolute;top:-1px;left:-1px;width:7px;height:7px;border-top:1.5px solid rgba(79,195,247,.8);border-left:1.5px solid rgba(79,195,247,.8);}
-    .ql-box::after{content:'';position:absolute;bottom:-1px;right:-1px;width:7px;height:7px;border-bottom:1.5px solid rgba(79,195,247,.8);border-right:1.5px solid rgba(79,195,247,.8);}
-    .ql-tr{position:absolute;top:-1px;right:-1px;width:7px;height:7px;border-top:1.5px solid rgba(79,195,247,.8);border-right:1.5px solid rgba(79,195,247,.8);}
-    .ql-bl{position:absolute;bottom:-1px;left:-1px;width:7px;height:7px;border-bottom:1.5px solid rgba(79,195,247,.8);border-left:1.5px solid rgba(79,195,247,.8);}
-    .ql-num{display:block;font-family:'Courier New',monospace;font-size:7px;letter-spacing:2.2px;color:rgba(79,195,247,.45);text-transform:uppercase;margin-bottom:3px;}
-    .ql-text{display:block;font-size:10.5px;color:rgba(255,255,255,.78);line-height:1.42;letter-spacing:.15px;}
-    
-    .ans-sheet{position:absolute;bottom:0;left:0;right:0;height: 350px;padding-bottom: env(safe-area-inset-bottom);background:rgba(4,10,40,.97);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);border-top:1px solid rgba(79,195,247,.16);border-radius:26px 26px 0 0;transform:translateY(100%);transition:transform .42s cubic-bezier(.34,1.1,.64,1);z-index:40;display:flex;flex-direction:column;}
+    .q-label{position:absolute; transform:translate(-50%,-50%); pointer-events:auto; cursor:pointer; transition:opacity .28s; user-select:none;}
+    .ql-pip{position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:6px; height:6px; border-radius:50%; background:rgba(79,195,247,.9); box-shadow:0 0 10px rgba(79,195,247,.8); z-index:2;}
+    .ql-box{position:relative; background:rgba(3,8,36,.88); backdrop-filter:blur(16px); border:1px solid rgba(79,195,247,.3); padding:8px 12px; max-width:160px; min-width:80px;}
+    .ql-box::before, .ql-box::after{content:''; position:absolute; width:8px; height:8px; border-color:rgba(79,195,247,.8); border-style:solid;}
+    .ql-box::before{top:-1px; left:-1px; border-width:1.5px 0 0 1.5px;}
+    .ql-box::after{bottom:-1px; right:-1px; border-width:0 1.5px 1.5px 0;}
+    .ql-num{display:block; font-family:monospace; font-size:8px; letter-spacing:2px; color:rgba(79,195,247,.5); margin-bottom:4px; text-transform:uppercase;}
+    .ql-text{display:block; font-size:11px; color:rgba(255,255,255,.8); line-height:1.45;}
+
+    /* AI 解答面板 */
+    .ans-sheet{position:absolute;bottom:0;left:0;right:0;height:380px;padding-bottom:env(safe-area-inset-bottom);background:rgba(4,10,40,.98);backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);border-top:1px solid rgba(79,195,247,.2);border-radius:28px 28px 0 0;transform:translateY(100%);transition:transform .45s cubic-bezier(.34,1.1,.64,1);z-index:40;display:flex;flex-direction:column;box-shadow: 0 -15px 50px rgba(0,0,0,0.6);}
     .ans-sheet.open{transform:translateY(0);}
-    .sheet-top{flex-shrink:0;padding:14px 20px 11px;display:flex;align-items:center;justify-content:space-between;}
-    .sheet-handle{width:38px;height:3px;border-radius:2px;background:rgba(255,255,255,.15);}
-    .sheet-close{width:28px;height:28px;border-radius:50%;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:rgba(255,255,255,.4);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
-    .sheet-body{flex:1;overflow-y:auto;padding:0 20px 28px;scrollbar-width:none;}
-    .sheet-body::-webkit-scrollbar{display:none;}
-    .sheet-eyebrow{font-family:'Courier New',monospace;font-size:8px;letter-spacing:2.5px;text-transform:uppercase;color:rgba(79,195,247,.5);margin-bottom:9px;}
-    .sheet-q{font-size:15.5px;font-weight:600;color:#fff;line-height:1.38;margin-bottom:14px;letter-spacing:.2px;}
-    .sheet-divider{height:1px;background:linear-gradient(90deg,rgba(79,195,247,.3) 0%,transparent 80%);margin-bottom:14px;}
-    .sheet-ans{font-size:13px;color:rgba(255,255,255,.72);line-height:1.82;letter-spacing:.18px;}
-    .sheet-ans strong{color:rgba(79,195,247,.95);font-weight:600;}
+    .sheet-top{flex-shrink:0; padding:16px 20px 12px; display:flex; align-items:center; justify-content:space-between;}
+    .sheet-handle{width:40px; height:4px; border-radius:2px; background:rgba(255,255,255,.15);}
+    .sheet-close{width:32px; height:32px; border-radius:50%; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.05); color:rgba(255,255,255,.5); font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center;}
+    .sheet-body{flex:1; overflow-y:auto; padding:0 22px 30px; scrollbar-width:none;}
+    .sheet-eyebrow{font-family:monospace; font-size:9px; letter-spacing:3px; text-transform:uppercase; color:rgba(79,195,247,.6); margin-bottom:12px;}
+    .sheet-q{font-size:17px; font-weight:600; color:#fff; line-height:1.4; margin-bottom:16px;}
+    .sheet-divider{height:1px; background:linear-gradient(90deg,rgba(79,195,247,.4) 0%,transparent 85%); margin-bottom:16px;}
+    .sheet-ans{font-size:14px; color:rgba(255,255,255,0.8); line-height:1.85; letter-spacing:.3px;}
+    .sheet-ans strong{color:rgba(79,195,247,1); font-weight:600;}
 
-    .tdots{display:flex;gap:5px;padding:5px 0;}
-    .td{width:5px;height:5px;border-radius:50%;background:rgba(79,195,247,.55);animation:tdAnim 1.3s ease-in-out infinite;}
-    .td:nth-child(2){animation-delay:.18s;}
-    .td:nth-child(3){animation-delay:.36s;}
-    @keyframes tdAnim{0%,60%,100%{transform:translateY(0);opacity:.35}30%{transform:translateY(-6px);opacity:1}}
+    .tdots{display:flex; gap:6px; padding:8px 0;}
+    .td{width:6px; height:6px; border-radius:50%; background:rgba(79,195,247,.6); animation:tdAnim 1.4s ease-in-out infinite;}
+    .td:nth-child(2){animation-delay:.2s;}
+    .td:nth-child(3){animation-delay:.4s;}
+    @keyframes tdAnim{0%,60%,100%{transform:translateY(0);opacity:.3}30%{transform:translateY(-8px);opacity:1}}
 
-    .follow-wrap{margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.05);}
-    .follow-label{font-family:'Courier New',monospace;font-size:7.5px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.2);margin-bottom:8px;}
-    .follow-btn{font-size:11.5px;color:rgba(79,195,247,.72);padding:8px 11px;margin-bottom:5px;border:1px solid rgba(79,195,247,.14);background:rgba(79,195,247,.04);cursor:pointer;display:block;width:100%;text-align:left;transition:all .18s;font-family:inherit;}
+    .follow-wrap{margin-top:18px; padding-top:15px; border-top:1px solid rgba(255,255,255,0.08);}
+    .follow-label{font-family:monospace; font-size:8px; letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,.25); margin-bottom:10px;}
+    .follow-btn{font-size:12px; color:rgba(79,195,247,.8); padding:10px 14px; margin-bottom:8px; border:1px solid rgba(79,195,247,.15); background:rgba(79,195,247,.05); cursor:pointer; display:block; width:100%; text-align:left; border-radius:8px; transition:all .2s;}
+    .follow-btn:active{background:rgba(79,195,247,0.15); color:#fff; border-color: rgba(79,195,247,0.4);}
+    
+    .sphere-hint{position:absolute; bottom:calc(28px + env(safe-area-inset-bottom)); left:0; right:0; text-align:center; font-family:monospace; font-size:8px; letter-spacing:3px; text-transform:uppercase; color:rgba(79,195,247,.2); pointer-events:none;}
   </style>
 </head>
 <body>
@@ -146,7 +149,7 @@
       </div>
     </div>
 
-    <div class="aw-card" id="card">
+    <div class="aw-card">
       <img class="aw-img-blur" id="aw-img-blur" src="" alt="" />
       <img class="aw-img" id="aw-img" src="" alt="" />
       <div class="aw-grad"></div>
@@ -170,7 +173,7 @@
 
     <div class="g-body">
       <div class="g-text" id="g-text-container">
-        <p>資料載入中，請稍候...</p>
+        <p>系統初始化中...</p>
       </div>
     </div>
 
@@ -191,9 +194,10 @@
     <canvas id="orb-canvas"></canvas>
     <div class="sa-topbar">
       <button class="bk-btn" onclick="hideAI()">←</button>
-      <span class="sa-badge">AI 深度解析</span>
+      <span class="sa-badge">AI 深度解析引擎</span>
     </div>
     <div class="q-labels-layer" id="qlayer"></div>
+    <div class="sphere-hint">DRAG TO EXPLORE &nbsp;·&nbsp; TAP TO ANALYZE</div>
     <div class="ans-sheet" id="ans-sheet">
       <div class="sheet-top"><div class="sheet-handle"></div><button class="sheet-close" onclick="closeSheet()">✕</button></div>
       <div class="sheet-body">
@@ -209,15 +213,16 @@
 
 <script>
 // ==========================================
-// 1. GEMINI API 設定 (請更換為您的金鑰)
+// 1. 全域設定與 API Key
 // ==========================================
-const GEMINI_API_KEY = 'YOUR_GEMINI_API_KEY_HERE'; 
+const GEMINI_API_KEY = 'AIzaSyDVpS21zj9HEzmIyvkI82JsAjtPcAsvdlA'; // <--- 請在此填入您的真實 API 金鑰
 
+// 預設問題集
 const genericQuestions = [
   "可以幫我總結一下這段導覽的核心重點嗎？",
   "這段介紹裡，有什麼最特別或有趣的故事？",
-  "這位畫家（或這個流派）最大的特色是什麼？",
-  "有什麼容易被忽略的細節可以分享嗎？",
+  "這位畫家最大的特色與對後世的影響？",
+  "有什麼細節或創作背景是值得我們深思的？",
   "這段內容傳達了怎樣的哲理或精神？"
 ];
 
@@ -226,27 +231,39 @@ let curAW = 0;
 let currentAudio = new Audio();
 let isPlaying = false;
 
+// ==========================================
+// 2. CSV 資料載入 (PapaParse)
+// ==========================================
 window.onload = () => {
   Papa.parse("data.csv", {
     download: true,
     header: true,
+    skipEmptyLines: true,
     complete: function(results) {
-      artworks = results.data.filter(r => r.title).map(r => ({
+      artworks = results.data.map(r => ({
         nm: r.title,
         img: `image/${r.image}.jpg`,
         audio: `audio/${r.audio}.mp3`,
-        desc: r.description,
-        idx: r.order
+        desc: r.description || ""
       }));
       
       if (artworks.length > 0) {
         changeAW(0); 
-        initSphere();
+        initSphere(); // 啟動 3D
+      } else {
+        document.getElementById('g-text-container').innerHTML = "<p>無法讀取資料，請確認 data.csv 位置。</p>";
       }
+    },
+    error: function(err) {
+      console.error("CSV Parse Error:", err);
+      document.getElementById('g-text-container').innerHTML = "<p>CSV 載入失敗。</p>";
     }
   });
 };
 
+// ==========================================
+// 3. 播放器控制
+// ==========================================
 function formatTime(seconds) {
   if (isNaN(seconds)) return "0:00";
   const m = Math.floor(seconds / 60);
@@ -254,23 +271,32 @@ function formatTime(seconds) {
   return `${m}:${String(s).padStart(2,'0')}`;
 }
 
-currentAudio.addEventListener('loadedmetadata', () => { document.getElementById('t-tot').textContent = formatTime(currentAudio.duration); });
+currentAudio.addEventListener('loadedmetadata', () => { 
+  document.getElementById('t-tot').textContent = formatTime(currentAudio.duration); 
+});
+
 currentAudio.addEventListener('timeupdate', () => {
   const t = currentAudio.currentTime;
   const dur = currentAudio.duration || 1;
   document.getElementById('t-now').textContent = formatTime(t);
   document.getElementById('pf').style.width = `${(t/dur)*100}%`;
 });
-currentAudio.addEventListener('ended', () => { isPlaying = false; document.getElementById('pl-btn').textContent = '▶'; setTimeout(showAI, 1000); });
+
+currentAudio.addEventListener('ended', () => { 
+  isPlaying = false; 
+  document.getElementById('pl-btn').textContent = '▶'; 
+  setTimeout(showAI, 1200); 
+});
 
 function togglePlay(){
   if(isPlaying){ currentAudio.pause(); isPlaying = false; document.getElementById('pl-btn').textContent = '▶'; } 
-  else { currentAudio.play(); isPlaying = true; document.getElementById('pl-btn').textContent = '⏸'; }
+  else { currentAudio.play().catch(e=>console.warn("播放受阻")); isPlaying = true; document.getElementById('pl-btn').textContent = '⏸'; }
 }
 
 function scrubAudio(e){ 
   const r = document.getElementById('p-track').getBoundingClientRect(); 
-  currentAudio.currentTime = ((e.clientX - r.left) / r.width) * currentAudio.duration;
+  const ratio = (e.clientX - r.left) / r.width;
+  if(currentAudio.duration) currentAudio.currentTime = ratio * currentAudio.duration;
 }
 
 function changeAW(d){
@@ -279,7 +305,7 @@ function changeAW(d){
   const a = artworks[curAW];
   
   document.getElementById('aw-img').src = a.img;
-  document.getElementById('aw-img-blur').src = a.img; // 更新背景模糊圖
+  document.getElementById('aw-img-blur').src = a.img;
   document.getElementById('aw-nm').textContent = a.nm;
   document.getElementById('aw-ct').textContent = `${curAW + 1} / ${artworks.length}`;
   document.getElementById('g-text-container').innerHTML = a.desc.split('\n').filter(p => p.trim()).map(p => `<p>${p}</p>`).join('');
@@ -293,33 +319,53 @@ function changeAW(d){
 }
 
 // ==========================================
-// AI 與 3D 部分保持原邏輯但套用新 UI
+// 4. Gemini API 真實解析
 // ==========================================
 async function fetchGeminiAnswer(questionText) {
+  if (!GEMINI_API_KEY || GEMINI_API_KEY.includes('YOUR_GEMINI')) {
+    return "錯誤：尚未設定 API Key。請在程式碼中填入金鑰。//請檢查 API 設定";
+  }
+
   const curArt = artworks[curAW];
-  const prompt = `你是專業的展覽AI導覽員，觀眾正在觀賞展品《${curArt.nm}》。介紹：${curArt.desc}。提問：「${questionText}」。請用繁體中文回答(150字內)，結尾加上「//延伸問題1//延伸問題2」。`;
+  const prompt = `你現在是專業導覽員。觀眾正在看展品《${curArt.nm}》。背景：${curArt.desc}。提問：「${questionText}」。請用繁體中文、口語親切地回答(150字內)，結尾加上「//延伸問題一//延伸問題二」。`;
+
   const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+  
   try {
-    const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) });
-    const data = await res.json();
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error.message);
     return data.candidates[0].content.parts[0].text;
-  } catch (err) { return "連線異常。//重新嘗試"; }
+  } catch (err) {
+    return `⚠️ API 解析失敗 (${err.message})。//重新嘗試//聯絡管理員`;
+  }
 }
 
+// ==========================================
+// 5. 頁面切換與問答邏輯
+// ==========================================
 function showAI(){ currentAudio.pause(); isPlaying = false; document.getElementById('pl-btn').textContent = '▶'; document.getElementById('sa').classList.add('show'); document.getElementById('g-bottom-orb').classList.add('hide'); }
 function hideAI(){ document.getElementById('sa').classList.remove('show'); document.getElementById('g-bottom-orb').classList.remove('hide'); closeSheet(); }
 
 async function renderAnswerSheet(qText, isMain = false, idx = 0) {
-  document.getElementById('seyebrow').textContent = isMain ? `QUERY.${String(idx).padStart(2,'0')}` : `FOLLOW-UP`;
+  document.getElementById('seyebrow').textContent = isMain ? `QUERY.${String(idx).padStart(2,'0')}` : `FOLLOW-UP ANALYTICS`;
   document.getElementById('sheetq').textContent = qText;
   document.getElementById('sheeta').innerHTML = '<div class="tdots"><div class="td"></div><div class="td"></div><div class="td"></div></div>';
   document.getElementById('ans-sheet').classList.add('open');
+  
   const reply = await fetchGeminiAnswer(qText);
   const parts = reply.split('//').map(s => s.trim()).filter(s => s);
+  
   let html = `<div class="sheet-ans">${parts[0].replace(/\n/g,'<br>')}</div>`;
   if(parts.length > 1){
     html += `<div class="follow-wrap"><div class="follow-label">// 延伸探索</div>`;
-    parts.slice(1).forEach(fq => { html += `<button class="follow-btn" onclick="renderAnswerSheet('${fq.replace(/'/g, "\\'")}')">${fq}</button>`; });
+    parts.slice(1).forEach(fq => { 
+      html += `<button class="follow-btn" onclick="renderAnswerSheet('${fq.replace(/'/g, "\\'")}')">${fq}</button>`; 
+    });
     html += `</div>`;
   }
   document.getElementById('sheeta').innerHTML = html;
@@ -327,9 +373,12 @@ async function renderAnswerSheet(qText, isMain = false, idx = 0) {
 
 function closeSheet(){ document.getElementById('ans-sheet').classList.remove('open'); }
 
+// ==========================================
+// 6. THREE.JS 3D 空間 (轉速：0.0005)
+// ==========================================
 let PW = window.innerWidth, PH = window.innerHeight;
 let renderer, scene, camera, wire;
-let baseY=0, baseX=0, velY=0, velX=0, isDrag=false, lastPX=0, lastPY=0, sphereInited=false, qLabelEls=[];
+let baseY=0, baseX=0, isDrag=false, lastPX=0, lastPY=0, sphereInited=false, qLabelEls=[];
 const SPHRAD = 1.25, SPHERE_Y = 0.28;
 const anchors = (()=>{ const pts=[]; for(let i=0;i<5;i++){ const phi=Math.acos(1-2*(i+0.5)/5), th=Math.PI*(1+Math.sqrt(5))*i+0.4; pts.push(new THREE.Vector3(Math.sin(phi)*Math.cos(th), Math.cos(phi), Math.sin(phi)*Math.sin(th)).multiplyScalar(SPHRAD)); } return pts; })();
 
@@ -339,22 +388,28 @@ function initSphere(){
   const canvas=document.getElementById('orb-canvas');
   renderer=new THREE.WebGLRenderer({canvas, alpha:true, antialias:true});
   renderer.setSize(PW, PH, false);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   scene=new THREE.Scene();
   camera=new THREE.PerspectiveCamera(58, PW/PH, 0.1, 100);
   camera.position.set(0, 0, 3.9);
   camera.lookAt(0, SPHERE_Y, 0);
+
   window.addEventListener('resize', () => { PW=window.innerWidth; PH=window.innerHeight; camera.aspect=PW/PH; camera.updateProjectionMatrix(); renderer.setSize(PW, PH, false); });
-  wire=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.IcosahedronGeometry(SPHRAD, 3)), new THREE.LineBasicMaterial({color:0x4fc3f7, transparent:true, opacity:0.28}));
+  
+  wire=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.IcosahedronGeometry(SPHRAD, 3)), new THREE.LineBasicMaterial({color:0x4fc3f7, transparent:true, opacity:0.3}));
   wire.position.y=SPHERE_Y; scene.add(wire);
+
   const layer=document.getElementById('qlayer');
   genericQuestions.forEach((q,i)=>{
-    const el=document.createElement('div'); el.className='q-label'; el.innerHTML=`<div class="ql-pip"></div><div class="ql-box"><span class="ql-tr"></span><span class="ql-bl"></span><span class="ql-num">Q.${String(i+1).padStart(2,'0')}</span><span class="ql-text">${q}</span></div>`;
+    const el=document.createElement('div'); el.className='q-label'; el.innerHTML=`<div class="ql-pip"></div><div class="ql-box"><span class="ql-num">Q.${String(i+1).padStart(2,'0')}</span><span class="ql-text">${q}</span></div>`;
     el.addEventListener('click', () => renderAnswerSheet(q, true, i+1));
     layer.appendChild(el); qLabelEls.push(el);
   });
+
   canvas.addEventListener('pointerdown',e=>{ isDrag=true; lastPX=e.clientX; lastPY=e.clientY; canvas.setPointerCapture(e.pointerId); });
   canvas.addEventListener('pointermove',e=>{ if(!isDrag) return; baseY+=(e.clientX-lastPX)*0.008; baseX+=(e.clientY-lastPY)*0.005; lastPX=e.clientX; lastPY=e.clientY; });
   canvas.addEventListener('pointerup',()=>{ isDrag=false; });
+
   (function animate(){
     requestAnimationFrame(animate);
     if(!isDrag){ baseY+=0.0005; baseX=Math.max(-0.42,Math.min(0.42,baseX)); }
@@ -375,7 +430,7 @@ function updateLabels(){
     if(dot<-0.02){ el.style.opacity='0'; el.style.pointerEvents='none'; return; }
     _v3.copy(wPos).project(camera);
     const sx=(_v3.x+1)/2*PW, sy=-(_v3.y-1)/2*PH;
-    if(sy > PH - sH - 20){ el.style.opacity='0'; el.style.pointerEvents='none'; return; }
+    if(sy > PH - sH - 30){ el.style.opacity='0'; el.style.pointerEvents='none'; return; }
     el.style.left=sx+'px'; el.style.top=sy+'px'; el.style.opacity=Math.min(1, (dot+0.02)/0.55).toString(); el.style.pointerEvents='auto';
   });
 }
