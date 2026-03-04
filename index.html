@@ -71,7 +71,7 @@
     .q-label{position:absolute; transform:translate(-50%,-50%); pointer-events:auto; cursor:pointer; transition:opacity .28s; user-select:none;}
     .ql-pip{position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:6px; height:6px; border-radius:50%; background:rgba(79,195,247,.9); box-shadow:0 0 10px rgba(79,195,247,.8); z-index:2; pointer-events:none;}
     
-    /* 微調 Label 大小以容納 10 個問題 */
+    /* 保持標籤大小，讓它們豐富且稍微重疊也沒關係 */
     .ql-box{position:relative; background:rgba(3,8,36,.88); backdrop-filter:blur(16px); border:1px solid rgba(79,195,247,.3); padding:6px 10px; max-width:140px; min-width:70px;}
     .ql-box::before, .ql-box::after{content:''; position:absolute; width:8px; height:8px; border-color:rgba(79,195,247,.8); border-style:solid;}
     .ql-box::before{top:-1px; left:-1px; border-width:1.5px 0 0 1.5px;}
@@ -162,7 +162,7 @@
 
 <script>
 const WORKER_URL = 'https://artogoai01.ougaga26.workers.dev/'; 
-const NUM_Q = 10; // 擴充為 10 個問題
+const NUM_Q = 15; // 🚀 擴充為 15 個問題，讓畫面滿滿的超豐富！
 
 let artworks = [];
 let curAW = 0;
@@ -179,15 +179,19 @@ window.onload = () => {
         img: `image/${r.image}.jpg`,
         audio: `audio/${r.audio}.mp3`,
         desc: r.description || "",
-        dynamicQs: null // 用來暫存 AI 生成的問題
+        dynamicQs: null, // 用來暫存 AI 生成的問題
+        isFetching: false // 追蹤是否正在背景預載
       }));
-      if (artworks.length > 0) { changeAW(0); initSphere(); } 
+      if (artworks.length > 0) { 
+        initSphere(); 
+        changeAW(0); 
+      } 
       else { document.getElementById('g-text-container').innerHTML = "<p>無法讀取資料。</p>"; }
     }
   });
 };
 
-// ════ 播放器與切換控制 ════
+// ════ 播放器控制 ════
 function formatTime(seconds) {
   if (isNaN(seconds)) return "0:00";
   const m = Math.floor(seconds / 60), s = Math.floor(seconds % 60);
@@ -208,6 +212,8 @@ function scrubAudio(e){
   const r = document.getElementById('p-track').getBoundingClientRect(); 
   if(currentAudio.duration) currentAudio.currentTime = ((e.clientX - r.left) / r.width) * currentAudio.duration;
 }
+
+// ════ 切換畫作與背景預載 ════
 function changeAW(d){
   if(artworks.length === 0) return;
   curAW = (curAW + d + artworks.length) % artworks.length;
@@ -221,32 +227,28 @@ function changeAW(d){
   // 切換畫作時，重置球上的文字狀態
   if(qLabelEls.length > 0) {
     qLabelEls.forEach(el => {
-      el.querySelector('.ql-text').textContent = "等待解析...";
+      el.querySelector('.ql-text').textContent = "AI 預載中...";
       el.style.pointerEvents = 'none';
     });
   }
 
   currentAudio.pause(); currentAudio.src = a.audio; currentAudio.load(); isPlaying = false;
   document.getElementById('pl-btn').textContent = '▶'; document.getElementById('pf').style.width = '0%';
+
+  // 🏆 無感體驗的核心：切換到這幅畫時，立刻在背景偷偷載入問題！
+  preloadDynamicQuestions(curAW);
 }
 
-// ════ AI 動態生成 10 個延伸問題 ════
-async function generateDynamicQuestions() {
-  const curArt = artworks[curAW];
+// ════ AI 背景偷偷生問題機制 ════
+async function preloadDynamicQuestions(artIndex) {
+  const curArt = artworks[artIndex];
   
-  // 如果已經生成過，就直接用快取，節省時間
-  if (curArt.dynamicQs) {
-    updateQuestionLabels(curArt.dynamicQs);
-    return;
-  }
+  // 如果已經生成過，或是正在生成中，就不要重複呼叫 API 避免浪費額度
+  if (curArt.dynamicQs || curArt.isFetching) return; 
 
-  // 顯示載入動畫
-  qLabelEls.forEach(el => {
-    el.querySelector('.ql-text').textContent = "AI 深度解析中...";
-    el.style.pointerEvents = 'none';
-  });
+  curArt.isFetching = true;
 
-  const prompt = `你是一個專業的博物館語音導覽員。觀眾正在觀賞展品《${curArt.nm}》，它的背景介紹是：「${curArt.desc}」。請根據這段介紹，生成 10 個觀眾可能會想深入追問的問題（例如關於畫家背景、細節、歷史意義等）。
+  const prompt = `你是一個專業的博物館語音導覽員。觀眾正在觀賞展品《${curArt.nm}》，它的背景介紹是：「${curArt.desc}」。請根據這段介紹，生成 ${NUM_Q} 個觀眾可能會想深入追問的問題（例如關於畫家背景、細節、歷史意義等）。
   要求：
   1. 只要輸出問題文字就好，每行一個問題。
   2. 絕對不要加數字編號、不要加項目符號、不要有空行。
@@ -262,20 +264,24 @@ async function generateDynamicQuestions() {
     if (!response.ok) throw new Error("API Error");
 
     const text = data.candidates[0].content.parts[0].text;
-    // 切割、過濾空白、移除可能的編號
     let qs = text.split('\n').map(q => q.replace(/^[\d\.、\-*\s]+/, '').trim()).filter(q => q);
     
-    // 確保剛好 10 個
+    // 確保數量剛好填滿球體
     while(qs.length < NUM_Q) qs.push("這幅作品還有什麼隱藏的細節嗎？");
     qs = qs.slice(0, NUM_Q);
 
     curArt.dynamicQs = qs; // 存入快取
-    updateQuestionLabels(qs);
+    curArt.isFetching = false;
+
+    // 🏆 如果觀眾已經點開了 AI 球，而且預載剛好完成，就瞬間幫他更新文字！
+    if (curAW === artIndex && document.getElementById('sa').classList.contains('show')) {
+      updateQuestionLabels(qs);
+    }
 
   } catch (err) {
     console.error("生成問題失敗:", err);
-    const errQs = Array(NUM_Q).fill("載入失敗，請點擊重試");
-    updateQuestionLabels(errQs);
+    curArt.isFetching = false;
+    // 如果失敗了，下次觀眾打開球時會顯示失敗，並允許重試
   }
 }
 
@@ -288,10 +294,9 @@ function updateQuestionLabels(qs) {
   });
 }
 
-// ════ 回答觀眾的問題 (修正延伸探索格式) ════
+// ════ 回答觀眾的問題 ════
 async function fetchGeminiAnswer(questionText) {
   const curArt = artworks[curAW];
-  // 修正這裡的 Prompt：強制 AI 真的去想兩個延伸問題，而不是照抄範例文字
   const prompt = `你現在是專業導覽員。觀眾正在看展品《${curArt.nm}》。背景：${curArt.desc}。提問：「${questionText}」。請用繁體中文、口語親切地回答(150字內)。回答完畢後，請務必根據展品內容，另外想出「兩個」讓觀眾可以繼續深入了解的延伸提問，並嚴格使用「//」作為分隔符號。格式範例：(你的回答內容)//(你出的延伸問題一)//(你出的延伸問題二)`;
 
   try {
@@ -313,9 +318,23 @@ function showAI(){
   currentAudio.pause(); isPlaying = false; document.getElementById('pl-btn').textContent = '▶'; 
   document.getElementById('sa').classList.add('show'); 
   document.getElementById('g-bottom-orb').classList.add('hide'); 
-  // 呼叫動態問題生成
-  generateDynamicQuestions(); 
+  
+  const curArt = artworks[curAW];
+  
+  if (curArt.dynamicQs) {
+    // 🏆 最理想狀況：背景早就偷偷載完了，瞬間顯示！
+    updateQuestionLabels(curArt.dynamicQs);
+  } else {
+    // 如果觀眾「秒按」球體，背景還沒載完，就先顯示等待畫面
+    const tempQs = Array(NUM_Q).fill("AI 極速解析中...");
+    updateQuestionLabels(tempQs);
+    qLabelEls.forEach(el => el.style.pointerEvents = 'none'); // 暫時不給按
+    
+    // 如果不知為何沒有觸發背景載入，就手動補推一把
+    if (!curArt.isFetching) preloadDynamicQuestions(curAW);
+  }
 }
+
 function hideAI(){ document.getElementById('sa').classList.remove('show'); document.getElementById('g-bottom-orb').classList.remove('hide'); closeSheet(); }
 
 async function renderAnswerSheet(qText, isMain = false, idx = 0) {
@@ -331,7 +350,6 @@ async function renderAnswerSheet(qText, isMain = false, idx = 0) {
   if(parts.length > 1){
     html += `<div class="follow-wrap"><div class="follow-label">// 延伸探索</div>`;
     parts.slice(1).forEach(fq => { 
-      // 確保延伸按鈕不會印出多餘的括號或符號
       const cleanFq = fq.replace(/^[()（）]/, '').replace(/[()（）]$/, '');
       html += `<button class="follow-btn" onclick="renderAnswerSheet('${cleanFq.replace(/'/g, "\\'")}')">${cleanFq}</button>`; 
     });
@@ -341,14 +359,14 @@ async function renderAnswerSheet(qText, isMain = false, idx = 0) {
 }
 function closeSheet(){ document.getElementById('ans-sheet').classList.remove('open'); }
 
-// ════ THREE.JS 3D 空間 (擴展為 10 個點) ════
+// ════ THREE.JS 3D 空間 (15 個點滿版佈局) ════
 let PW = window.innerWidth, PH = window.innerHeight;
 let renderer, scene, camera, wire;
 let baseY=0, baseX=0, isDrag=false, lastPX=0, lastPY=0, sphereInited=false, qLabelEls=[];
-const SPHRAD = 1.35; // 把球稍微放大一點，容納 10 個標籤
+const SPHRAD = 1.35; // 維持大球徑容納 15 個標籤
 const SPHERE_Y = 0.28;
 
-// 費氏數列球體分佈演算法 (生成 10 個均勻點)
+// 費氏數列球體分佈演算法 (完美均勻生成 15 個點)
 const anchors = (()=>{ 
   const pts=[]; 
   for(let i=0; i<NUM_Q; i++){ 
@@ -383,8 +401,7 @@ function initSphere(){
     
     el.addEventListener('click', () => {
       const text = el.querySelector('.ql-text').textContent;
-      if(text.includes('解析中') || text.includes('等待')) return; 
-      if(text.includes('載入失敗')) { generateDynamicQuestions(); return; } 
+      if(text.includes('解析中') || text.includes('預載中') || text.includes('等待')) return; 
 
       qLabelEls.forEach(l => l.classList.remove('active'));
       el.classList.add('active');
@@ -399,7 +416,7 @@ function initSphere(){
 
   (function animate(){
     requestAnimationFrame(animate);
-    if(!isDrag){ baseY+=0.00025; baseX=Math.max(-0.42,Math.min(0.42,baseX)); }
+    if(!isDrag){ baseY+=0.0005; baseX=Math.max(-0.42,Math.min(0.42,baseX)); }
     wire.rotation.set(baseX, baseY, 0);
     renderer.render(scene, camera);
     updateLabels(); 
