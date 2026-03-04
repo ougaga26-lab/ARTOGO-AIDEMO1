@@ -6,11 +6,23 @@
   <title>浮世繪 AI 導覽</title>
   <style>
     *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-    /* 移除 body 的置中對齊，讓內容自然延展 */
-    body{font-family:-apple-system,'Noto Sans TC',BlinkMacSystemFont,'Helvetica Neue',sans-serif;background:#07070f;margin:0;padding:0;overflow:hidden;}
     
-    /* 1. RWD 修改：將 phone 寬高設為 100vw 與 100vh，移除圓角與陰影 */
-    .phone{width:100vw;height:100vh;position:relative;overflow:hidden;}
+    /* 1. 解決手機瀏覽器高度 Bug，使用 100% 確保不會溢出 */
+    html, body {
+      width: 100%; height: 100%; overflow: hidden; margin: 0; padding: 0;
+    }
+    body {
+      font-family: -apple-system, 'Noto Sans TC', BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+      background: #07070f;
+    }
+    
+    /* 2. 導入 100dvh (動態視窗高度)，完美適應有網址列的 Safari/Chrome */
+    .phone {
+      width: 100%; 
+      height: 100%; /* 舊瀏覽器備案 */
+      height: 100dvh; /* 新瀏覽器動態高度 */
+      position: relative; overflow: hidden;
+    }
 
     /* ═══════════════ SCREEN 1 — AUDIO GUIDE ═══════════════ */
     #sg{position:absolute;inset:0;background:linear-gradient(155deg,#0d1b4b 0%,#0a3060 45%,#0c4870 80%,#071a3a 100%);display:flex;flex-direction:column;}
@@ -35,14 +47,18 @@
     .pl-btn:active{transform:scale(.93);}
     .t-now{font-size:12px;color:rgba(255,255,255,.5);font-variant-numeric:tabular-nums;}
     .t-tot{font-size:11px;color:rgba(255,255,255,.22);margin-left:auto;}
-    /* 讓內文區域在大螢幕上有最大寬度限制，閱讀體驗更好 */
     .g-body{flex:1;overflow-y:auto;margin:14px auto 0;padding: 0 22px 130px; max-width: 600px; scrollbar-width:none;}
     .g-body::-webkit-scrollbar{display:none;}
     .g-text{font-size:14px;line-height:1.95;color:rgba(255,255,255,.7);letter-spacing:.25px;}
     .g-text p+p{margin-top:14px;}
     
+    /* 3. 底部區塊加入 safe-area-inset-bottom，保證按鈕不會被 iPhone 橫條或瀏覽器底欄遮擋 */
     .g-bottom {
-      position:absolute;bottom:0;left:0;right:0;padding:10px 0 46px;display:flex;justify-content:center;align-items:center;background:linear-gradient(to top,#071a3a 70%,transparent);
+      position: absolute; bottom: 0; left: 0; right: 0; 
+      padding-top: 20px;
+      padding-bottom: calc(30px + env(safe-area-inset-bottom)); /* 動態安全距離 */
+      display: flex; justify-content: center; align-items: center;
+      background: linear-gradient(to top, #071a3a 80%, transparent);
       transition: opacity 0.4s ease, transform 0.4s ease;
       z-index: 20;
     }
@@ -52,9 +68,9 @@
       transform: translateY(20px);
     }
 
-    /* ═══════════════ 全新科技感 AI 液態核心按鈕 (縮小至70%) ═══════════════ */
+    /* ═══════════════ 全新科技感 AI 液態核心按鈕 ═══════════════ */
     .mini-orb {
-      width: 60px; height: 60px; position: relative; /* 原 86px */
+      width: 60px; height: 60px; position: relative;
       display: flex; align-items: center; justify-content: center;
       cursor: pointer; z-index: 10;
       transition: transform 0.2s;
@@ -62,31 +78,30 @@
     .mini-orb:active { transform: scale(0.95); }
 
     .mo-glow {
-      position: absolute; width: 105px; height: 105px; border-radius: 50%; /* 原 150px */
+      position: absolute; width: 105px; height: 105px; border-radius: 50%;
       background: radial-gradient(circle, rgba(138, 43, 226, 0.4) 0%, rgba(0, 191, 255, 0.15) 45%, transparent 70%);
       animation: pulseGlow 3s ease-in-out infinite alternate;
       pointer-events: none;
     }
 
     .mo-core {
-      position: absolute; width: 46px; height: 46px; border-radius: 50%; /* 原 66px */
+      position: absolute; width: 46px; height: 46px; border-radius: 50%;
       background: radial-gradient(circle at 35% 35%, #e0b0ff 0%, #a855f7 25%, #4338ca 65%, #1e1b4b 100%);
-      /* 陰影等比例減弱 */
       box-shadow: inset -3px -3px 8px rgba(0,0,0,0.6), inset 4px 4px 10px rgba(255,255,255,0.7), 0 0 14px rgba(168, 85, 247, 0.5);
       animation: morphCore 6s ease-in-out infinite alternate;
     }
 
     .mo-ring-1 {
-      position: absolute; width: 56px; height: 56px; /* 原 80px */
+      position: absolute; width: 56px; height: 56px;
       border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%;
-      border: 2px solid rgba(255,255,255,0.9); /* 線條變細 */
+      border: 2px solid rgba(255,255,255,0.9);
       box-shadow: 0 0 8px #7dd3fc, inset 0 0 8px #7dd3fc;
       animation: spinRing 4s linear infinite;
       mix-blend-mode: screen; 
     }
 
     .mo-ring-2 {
-      position: absolute; width: 60px; height: 60px; /* 原 86px */
+      position: absolute; width: 60px; height: 60px;
       border-radius: 60% 40% 30% 70% / 50% 60% 40% 50%;
       border: 2px solid rgba(192, 132, 252, 0.8);
       box-shadow: 0 0 12px rgba(168, 85, 247, 0.8), inset 0 0 10px rgba(168, 85, 247, 0.5);
@@ -95,7 +110,7 @@
     }
 
     .mo-highlight {
-      position: absolute; width: 46px; height: 46px; border-radius: 50%; /* 原 66px */
+      position: absolute; width: 46px; height: 46px; border-radius: 50%;
       background: radial-gradient(circle at 50% 15%, rgba(255,255,255,0.6) 0%, transparent 35%);
       pointer-events: none;
       z-index: 2;
@@ -126,21 +141,17 @@
     #sa{position:absolute;inset:0;transform:translateY(100%);transition:transform .65s cubic-bezier(.34,1.2,.64,1);z-index:30;} 
     #sa.show{transform:translateY(0);}
 
-    /* Background layers */
     .sa-bg{position:absolute;inset:0;background:radial-gradient(ellipse 90% 80% at 50% 44%,#0b1c4a 0%,#060a1c 50%,#030310 100%);}
     .sa-grid{position:absolute;inset:0;pointer-events:none;background-image:linear-gradient(rgba(79,195,247,.022) 1px,transparent 1px),linear-gradient(90deg,rgba(79,195,247,.022) 1px,transparent 1px);background-size:30px 30px;}
 
-    /* Canvas occupies entire screen */
     #orb-canvas{position:absolute;inset:0;width:100%;height:100%;cursor:grab;touch-action:none;z-index:5;}
     #orb-canvas:active{cursor:grabbing;}
 
-    /* Floating topbar */
     .sa-topbar{position:absolute;top:0;left:0;right:0;z-index:25;padding:50px 22px 0;display:flex;align-items:center;justify-content:space-between;pointer-events:none;}
     .bk-btn{width:34px;height:34px;border-radius:50%;border:1px solid rgba(255,255,255,.15);background:rgba(6,12,40,.7);backdrop-filter:blur(14px);color:rgba(255,255,255,.65);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s;pointer-events:auto;}
     .bk-btn:active{background:rgba(255,255,255,.14);}
     .sa-badge{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:rgba(79,195,247,.7);background:rgba(6,12,40,.7);backdrop-filter:blur(14px);border:1px solid rgba(79,195,247,.22);padding:5px 12px;border-radius:20px;}
 
-    /* ── Question labels floating on sphere surface ── */
     .q-labels-layer{position:absolute;inset:0;z-index:15;pointer-events:none;}
 
     .q-label{
@@ -180,7 +191,6 @@
     .ql-num{display:block;font-family:'Courier New',monospace;font-size:7px;letter-spacing:2.2px;color:rgba(79,195,247,.45);text-transform:uppercase;margin-bottom:3px;}
     .ql-text{display:block;font-size:10.5px;color:rgba(255,255,255,.78);line-height:1.42;letter-spacing:.15px;}
 
-    /* Active label */
     .q-label.active .ql-box{border-color:rgba(79,195,247,.85);box-shadow:0 0 22px rgba(79,195,247,.2);}
     .q-label.active .ql-box::before,.q-label.active .ql-box::after{border-color:rgba(79,195,247,1);}
     .q-label.active .ql-tr,.q-label.active .ql-bl{border-color:rgba(79,195,247,1);}
@@ -188,12 +198,14 @@
     .q-label.active .ql-text{color:#fff;}
     .q-label.active .ql-pip{background:#4fc3f7;box-shadow:0 0 12px rgba(79,195,247,1);}
 
-    .sphere-hint{position:absolute;bottom:24px;left:0;right:0;text-align:center;font-family:'Courier New',monospace;font-size:7.5px;letter-spacing:2.8px;text-transform:uppercase;color:rgba(79,195,247,.15);z-index:10;pointer-events:none;}
+    .sphere-hint{position:absolute;bottom:calc(24px + env(safe-area-inset-bottom));left:0;right:0;text-align:center;font-family:'Courier New',monospace;font-size:7.5px;letter-spacing:2.8px;text-transform:uppercase;color:rgba(79,195,247,.15);z-index:10;pointer-events:none;}
 
     /* ── Answer Bottom Sheet ── */
     .ans-sheet{
       position:absolute;bottom:0;left:0;right:0;
-      height:330px;
+      height: 330px;
+      /* 確保面板也不會被 iPhone 橫條卡住內容 */
+      padding-bottom: env(safe-area-inset-bottom);
       background:rgba(4,10,40,.97);
       backdrop-filter:blur(30px);
       -webkit-backdrop-filter:blur(30px);
@@ -318,9 +330,10 @@
     </div>
   </div>
 
-</div><script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
-/* ─────────── DATA ─────────── */
 const artworks = [
   { nm:'神奈川沖浪裏', mt:'葛飾北齋｜1830年｜《冨嶽三十六景》系列',
     img:'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0a/The_Great_Wave_off_Kanagawa.jpg/1280px-The_Great_Wave_off_Kanagawa.jpg', idx:9 },
@@ -357,7 +370,6 @@ const answers = {
   q9:{ a:'《神奈川沖浪裏》成為日本文化象徵，原因是多方面的：\n\n它跨越了藝術與流行文化的界線，出現在貨幣、奧運海報、無數商品設計中。它以<strong>普通漁夫面對自然</strong>的視角，傳達出日本文化中對自然的敬畏與人的渺小感，使它成為<strong>全球最被認可的日本文化符號之一</strong>。', f:['浮世繪如何影響當代設計？'] },
 };
 
-/* ─────────── SCREEN 1: AUDIO ─────────── */
 let playing=false, t=0, dur=324, ticker;
 function togglePlay(){
   playing=!playing;
@@ -382,7 +394,6 @@ function changeAW(d){
   document.getElementById('pl-btn').textContent='▶'; updateAudio();
 }
 
-/* ─────────── SCREEN TRANSITIONS ─────────── */
 function showAI(){ 
   clearInterval(ticker); 
   document.getElementById('sa').classList.add('show'); 
@@ -395,8 +406,6 @@ function hideAI(){
   closeSheet(); 
 }
 
-/* ─────────── THREE.JS SPHERE (RWD 動態寬高支援) ─────────── */
-// 將原本固定的 390x844 改為讀取視窗大小
 let PW = window.innerWidth, PH = window.innerHeight;
 let renderer, scene, camera, wire;
 let baseY=0, baseX=0, velY=0, velX=0;
@@ -439,7 +448,6 @@ function initSphere(){
   camera.position.set(0, 0, 3.9);
   camera.lookAt(0, SPHERE_Y, 0);
 
-  // 監聽視窗縮放事件，讓 3D 場景自動適應 RWD
   window.addEventListener('resize', () => {
     PW = window.innerWidth;
     PH = window.innerHeight;
@@ -522,7 +530,7 @@ function initSphere(){
 
     if(!isDrag){
       velY*=0.90; velX*=0.90;
-      baseY+=0.0005+velY; baseX+=velX; 
+      baseY+=0.0015+velY; baseX+=velX; 
       baseX=Math.max(-0.42,Math.min(0.42,baseX));
     }
     hoverX+=(mouseY*0.22-hoverX)*0.042;
