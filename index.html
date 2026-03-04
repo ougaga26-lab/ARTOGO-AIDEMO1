@@ -181,7 +181,7 @@ function changeAW(d){
   document.getElementById('aw-ct').textContent = `${curAW + 1} / ${artworks.length}`;
   document.getElementById('g-text-container').innerHTML = a.desc.split('\n').filter(p => p.trim()).map(p => `<p>${p}</p>`).join('');
   
-  if(qLabelEls.length > 0) qLabelEls.forEach(el => el.querySelector('.ql-text').textContent = "AI黛尼解析中...");
+  if(qLabelEls.length > 0) qLabelEls.forEach(el => el.querySelector('.ql-text').textContent = "AI黛尼思考中...");
 
   currentAudio.pause(); currentAudio.src = a.audio; currentAudio.load(); isPlaying = false;
   document.getElementById('pl-btn').textContent = '▶'; document.getElementById('pf').style.width = '0%';
@@ -310,7 +310,7 @@ function initSphere(){
   const layer = document.getElementById('qlayer');
   for(let i=0; i<NUM_Q; i++){
     const el = document.createElement('div'); el.className='q-label'; 
-    el.innerHTML=`<div class="ql-pip"></div><div class="ql-box"><span class="ql-num">Q.${String(i+1).padStart(2,'0')}</span><span class="ql-text">AI黛尼解析中...</span></div>`;
+    el.innerHTML=`<div class="ql-pip"></div><div class="ql-box"><span class="ql-num">Q.${String(i+1).padStart(2,'0')}</span><span class="ql-text">AI黛尼思考中...</span></div>`;
     el.querySelector('.ql-box').addEventListener('click', () => {
       const text = el.querySelector('.ql-text').textContent;
       if(text.includes('中') || text.includes('失敗')) return;
