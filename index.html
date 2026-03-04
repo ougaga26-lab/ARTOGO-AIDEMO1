@@ -50,17 +50,15 @@
     .g-text{font-size:14px;line-height:1.95;color:rgba(255,255,255,.7);letter-spacing:.25px;}
     .g-text p+p{margin-top:14px;}
     
-    /* 改良後的柔和漸層底部區塊 */
+    /* 柔和漸層底部區塊 */
     .g-bottom {
       position: absolute; bottom: 0; left: 0; right: 0; 
-      padding-top: 80px; /* 增加頂部 padding，讓漸層過渡的空間變大 */
+      padding-top: 80px; 
       padding-bottom: calc(30px + env(safe-area-inset-bottom)); 
       display: flex; justify-content: center; align-items: center;
-      /* 使用更細膩的三段式漸層，消除生硬的邊界線 */
       background: linear-gradient(to top, #071a3a 10%, rgba(7, 26, 58, 0.6) 50%, transparent 100%);
       transition: opacity 0.4s ease, transform 0.4s ease;
       z-index: 20;
-      /* 關鍵 UX：讓漸層區塊不吃掉觸控，使用者可以隔著漸層滑動文字 */
       pointer-events: none; 
     }
     .g-bottom.hide {
@@ -69,13 +67,12 @@
       transform: translateY(20px);
     }
 
-    /* ═══════════════ 全新科技感 AI 液態核心按鈕 ═══════════════ */
+    /* ═══════════════ 科技感 AI 液態核心按鈕 (原始藍紫配色) ═══════════════ */
     .mini-orb {
       width: 60px; height: 60px; position: relative;
       display: flex; align-items: center; justify-content: center;
       cursor: pointer; z-index: 10;
       transition: transform 0.2s;
-      /* 恢復按鈕本身的觸控功能，不受外層 pointer-events: none 影響 */
       pointer-events: auto; 
     }
     .mini-orb:active { transform: scale(0.95); }
@@ -529,7 +526,6 @@ function initSphere(){
 
     if(!isDrag){
       velY*=0.90; velX*=0.90;
-      /* 將基礎轉速調慢為 0.0005，實現緩慢旋轉的科技感 */
       baseY+=0.0005+velY; baseX+=velX; 
       baseX=Math.max(-0.42,Math.min(0.42,baseX));
     }
