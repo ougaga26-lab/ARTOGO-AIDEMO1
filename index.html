@@ -7,78 +7,37 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <style>
-    /* 基礎重置 */
     *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-    html, body { width: 100%; height: 100%; overflow: hidden; margin: 0; padding: 0; }
-    body { font-family: -apple-system, 'Noto Sans TC', BlinkMacSystemFont, 'Helvetica Neue', sans-serif; background: #07070f; }
-    
-    /* 100dvh 解決手機工具列遮擋問題 */
-    .phone { width: 100%; height: 100%; height: 100dvh; position: relative; overflow: hidden; }
-
-    /* ═══════════════ 第一頁：導覽介面 ═══════════════ */
+    html, body { width: 100%; height: 100%; overflow: hidden; margin: 0; padding: 0; background: #07070f; font-family: -apple-system, 'Noto Sans TC', sans-serif;}
+    .phone { width: 100%; height: 100dvh; position: relative; overflow: hidden; }
     #sg{position:absolute;inset:0;background:linear-gradient(155deg,#0d1b4b 0%,#0a3060 45%,#0c4870 80%,#071a3a 100%);display:flex;flex-direction:column;}
-    
-    /* 頂部導覽列：移除標題，按鈕靠右 */
     .g-topbar{padding:15px 22px 10px; display:flex; justify-content:flex-end; align-items:center; flex-shrink:0;}
     .aw-nav{display:flex; align-items:center; gap:8px;}
-    .n-btn{width:32px; height:32px; border-radius:50%; border:1px solid rgba(255,255,255,.18); background:rgba(255,255,255,.07); color:rgba(255,255,255,.8); font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background .2s;}
+    .n-btn{width:32px; height:32px; border-radius:50%; border:1px solid rgba(255,255,255,.18); background:rgba(255,255,255,.07); color:rgba(255,255,255,.8); font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center;}
     .n-btn:active{background:rgba(255,255,255,.25);}
     .aw-ct{font-size:12px; color:rgba(255,255,255,.35); min-width: 40px; text-align: center; letter-spacing: 1px;}
-
-    /* 正方形圖片區域：含模糊背景 */
-    .aw-card{
-        margin:0 auto; width: calc(100% - 44px); max-width: 500px; 
-        aspect-ratio: 1/1; 
-        border-radius:24px; overflow:hidden; position:relative; flex-shrink:0;
-        box-shadow:0 20px 50px rgba(0,0,0,0.5); background: #000;
-    }
-    .aw-img-blur {
-        position: absolute; inset: 0; width: 100%; height: 100%;
-        object-fit: cover; filter: blur(30px) brightness(0.5); transform: scale(1.2);
-    }
+    .aw-card{margin:0 auto; width: calc(100% - 44px); max-width: 500px; aspect-ratio: 1/1; border-radius:24px; overflow:hidden; position:relative; flex-shrink:0; box-shadow:0 20px 50px rgba(0,0,0,0.5); background: #000;}
+    .aw-img-blur {position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: blur(30px) brightness(0.5); transform: scale(1.2);}
     .aw-img{ position: relative; width:100%; height:100%; object-fit:contain; z-index: 1; }
     .aw-grad{position:absolute;inset:0;background:linear-gradient(to top,rgba(8,22,70,0.85) 0%, transparent 40%); z-index: 2;}
     .aw-info{position:absolute;bottom:18px;left:20px;right:20px; z-index: 3;}
     .aw-nm{font-size:22px; font-weight:700; color:#fff; letter-spacing:1px; text-shadow:0 2px 15px rgba(0,0,0,0.6);}
-
-    /* 播放器：進度條與按鈕同行 */
-    .audio-pl{
-        margin:14px auto 0; width: calc(100% - 44px); max-width: 500px; 
-        padding:12px 18px; background:rgba(255,255,255,.07); backdrop-filter:blur(25px);
-        border-radius:18px; border:1px solid rgba(255,255,255,.1); flex-shrink:0;
-        display: flex; align-items: center; gap: 15px;
-    }
+    .audio-pl{margin:14px auto 0; width: calc(100% - 44px); max-width: 500px; padding:12px 18px; background:rgba(255,255,255,.07); backdrop-filter:blur(25px); border-radius:18px; border:1px solid rgba(255,255,255,.1); flex-shrink:0; display: flex; align-items: center; gap: 15px;}
     .prog-area { flex: 1; display: flex; flex-direction: column; gap: 6px; }
     .prog-track{height:4px; background:rgba(255,255,255,.12); border-radius:2px; cursor:pointer; position: relative;}
     .prog-fill{height:100%; background:linear-gradient(90deg,#4fc3f7,#81d4fa); border-radius:2px; width:0%; position:relative; pointer-events: none;}
     .prog-fill::after{content:''; position:absolute; right:-4px; top:50%; transform:translateY(-50%); width:10px; height:10px; border-radius:50%; background:#81d4fa; box-shadow:0 0 10px rgba(129,212,250,1);}
     .time-row { display: flex; justify-content: space-between; font-size: 11px; color: rgba(255,255,255,.3); font-variant-numeric: tabular-nums; }
-    
-    .pl-btn{
-        width:42px; height:42px; border-radius:50%; 
-        background:linear-gradient(135deg,#4fc3f7,#0288d1); border:none; color:#fff; 
-        font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center; 
-        box-shadow:0 4px 20px rgba(79,195,247,.4); flex-shrink: 0; transition: transform 0.1s;
-    }
+    .pl-btn{width:42px; height:42px; border-radius:50%; background:linear-gradient(135deg,#4fc3f7,#0288d1); border:none; color:#fff; font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 20px rgba(79,195,247,.4); flex-shrink: 0;}
     .pl-btn:active { transform: scale(0.9); }
-
-    /* 導覽文字區 */
     .g-body{flex:1; overflow-y:auto; margin:12px auto 0; padding: 0 22px 140px; max-width: 600px; scrollbar-width:none;}
     .g-body::-webkit-scrollbar{display:none;}
     .g-text{font-size:15px; line-height:1.95; color:rgba(255,255,255,.75); letter-spacing:.3px; text-align: justify;}
     .g-text p{margin-bottom:16px;}
-    
-    /* 底部柔和漸層與 AI 按鈕 (70%) */
-    .g-bottom {
-      position: absolute; bottom: 0; left: 0; right: 0; 
-      padding-top: 100px; padding-bottom: calc(25px + env(safe-area-inset-bottom)); 
-      display: flex; justify-content: center; align-items: center;
-      background: linear-gradient(to top, #071a3a 15%, rgba(7, 26, 58, 0.6) 55%, transparent 100%);
-      transition: opacity 0.4s ease, transform 0.4s ease; z-index: 20; pointer-events: none; 
-    }
+    .g-bottom {position: absolute; bottom: 0; left: 0; right: 0; padding-top: 100px; padding-bottom: calc(25px + env(safe-area-inset-bottom)); display: flex; justify-content: center; align-items: center; background: linear-gradient(to top, #071a3a 15%, rgba(7, 26, 58, 0.6) 55%, transparent 100%); transition: opacity 0.4s ease, transform 0.4s ease; z-index: 20; pointer-events: none; }
     .g-bottom.hide { opacity: 0; pointer-events: none; transform: translateY(30px); }
-
     .mini-orb { width: 60px; height: 60px; position: relative; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 10; transition: transform 0.2s; pointer-events: auto; }
+    .mini-orb:active { transform: scale(0.95); }
     .mo-glow { position: absolute; width: 100px; height: 100px; border-radius: 50%; background: radial-gradient(circle, rgba(79, 195, 247, 0.3) 0%, rgba(138, 43, 226, 0.1) 45%, transparent 70%); animation: pulseGlow 3s ease-in-out infinite alternate; pointer-events: none; }
     .mo-core { position: absolute; width: 42px; height: 42px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #e0b0ff 0%, #a855f7 25%, #4338ca 65%, #1e1b4b 100%); box-shadow: inset -3px -3px 8px rgba(0,0,0,0.6), inset 4px 4px 10px rgba(255,255,255,0.7), 0 0 14px rgba(168, 85, 247, 0.5); animation: morphCore 6s ease-in-out infinite alternate; }
     .mo-ring-1 { position: absolute; width: 56px; height: 56px; border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%; border: 2px solid rgba(255,255,255,0.8); box-shadow: 0 0 8px #7dd3fc, inset 0 0 8px #7dd3fc; animation: spinRing 4s linear infinite; mix-blend-mode: screen; }
@@ -88,29 +47,25 @@
     @keyframes morphCore { 0% { border-radius: 50%; transform: scale(1) rotate(0deg); } 50% { border-radius: 47% 53% 45% 55%; transform: scale(1.02) rotate(15deg); } 100% { border-radius: 53% 47% 55% 45%; transform: scale(0.98) rotate(-15deg); } }
     @keyframes spinRing { 0% { transform: rotate(0deg) scale(1); } 50% { transform: rotate(180deg) scale(1.03); } 100% { transform: rotate(360deg) scale(1); } }
     @keyframes spinRingReverse { 0% { transform: rotate(360deg) scale(1); } 50% { transform: rotate(180deg) scale(0.97); } 100% { transform: rotate(0deg) scale(1); } }
-
-    /* ═══════════════ 第二頁：AI 3D 解析 ═══════════════ */
     #sa{position:absolute;inset:0;transform:translateY(100%);transition:transform .65s cubic-bezier(.34,1.2,.64,1);z-index:30;} 
     #sa.show{transform:translateY(0);}
     .sa-bg{position:absolute;inset:0;background:radial-gradient(ellipse 90% 80% at 50% 44%,#0b1c4a 0%,#060a1c 50%,#030310 100%);}
     .sa-grid{position:absolute;inset:0;pointer-events:none;background-image:linear-gradient(rgba(79,195,247,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(79,195,247,.025) 1px,transparent 1px);background-size:30px 30px;}
     #orb-canvas{position:absolute;inset:0;width:100%;height:100%;cursor:grab;touch-action:none;z-index:5;}
-    
     .sa-topbar{position:absolute;top:0;left:0;right:0;z-index:25;padding:50px 22px 0;display:flex;align-items:center;justify-content:space-between;pointer-events:none;}
     .bk-btn{width:36px; height:36px; border-radius:50%; border:1px solid rgba(255,255,255,.15); background:rgba(6,12,40,.7); backdrop-filter:blur(14px); color:rgba(255,255,255,.65); font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center; pointer-events:auto;}
     .sa-badge{font-size:9px; letter-spacing:2px; text-transform:uppercase; color:rgba(79,195,247,.8); background:rgba(6,12,40,.7); backdrop-filter:blur(14px); border:1px solid rgba(79,195,247,.25); padding:6px 14px; border-radius:20px;}
-    
     .q-labels-layer{position:absolute;inset:0;z-index:15;pointer-events:none;}
     .q-label{position:absolute; transform:translate(-50%,-50%); pointer-events:auto; cursor:pointer; transition:opacity .28s; user-select:none;}
-    .ql-pip{position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:6px; height:6px; border-radius:50%; background:rgba(79,195,247,.9); box-shadow:0 0 10px rgba(79,195,247,.8); z-index:2;}
+    .ql-pip{position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:6px; height:6px; border-radius:50%; background:rgba(79,195,247,.9); box-shadow:0 0 10px rgba(79,195,247,.8); z-index:2; pointer-events:none;}
     .ql-box{position:relative; background:rgba(3,8,36,.88); backdrop-filter:blur(16px); border:1px solid rgba(79,195,247,.3); padding:8px 12px; max-width:160px; min-width:80px;}
     .ql-box::before, .ql-box::after{content:''; position:absolute; width:8px; height:8px; border-color:rgba(79,195,247,.8); border-style:solid;}
     .ql-box::before{top:-1px; left:-1px; border-width:1.5px 0 0 1.5px;}
     .ql-box::after{bottom:-1px; right:-1px; border-width:0 1.5px 1.5px 0;}
     .ql-num{display:block; font-family:monospace; font-size:8px; letter-spacing:2px; color:rgba(79,195,247,.5); margin-bottom:4px; text-transform:uppercase;}
     .ql-text{display:block; font-size:11px; color:rgba(255,255,255,.8); line-height:1.45;}
-
-    /* AI 解答面板 */
+    .q-label.active .ql-box{border-color:rgba(79,195,247,.85);box-shadow:0 0 22px rgba(79,195,247,.2);}
+    .q-label.active .ql-pip{background:#4fc3f7;box-shadow:0 0 12px rgba(79,195,247,1);}
     .ans-sheet{position:absolute;bottom:0;left:0;right:0;height:380px;padding-bottom:env(safe-area-inset-bottom);background:rgba(4,10,40,.98);backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);border-top:1px solid rgba(79,195,247,.2);border-radius:28px 28px 0 0;transform:translateY(100%);transition:transform .45s cubic-bezier(.34,1.1,.64,1);z-index:40;display:flex;flex-direction:column;box-shadow: 0 -15px 50px rgba(0,0,0,0.6);}
     .ans-sheet.open{transform:translateY(0);}
     .sheet-top{flex-shrink:0; padding:16px 20px 12px; display:flex; align-items:center; justify-content:space-between;}
@@ -122,18 +77,14 @@
     .sheet-divider{height:1px; background:linear-gradient(90deg,rgba(79,195,247,.4) 0%,transparent 85%); margin-bottom:16px;}
     .sheet-ans{font-size:14px; color:rgba(255,255,255,0.8); line-height:1.85; letter-spacing:.3px;}
     .sheet-ans strong{color:rgba(79,195,247,1); font-weight:600;}
-
     .tdots{display:flex; gap:6px; padding:8px 0;}
     .td{width:6px; height:6px; border-radius:50%; background:rgba(79,195,247,.6); animation:tdAnim 1.4s ease-in-out infinite;}
     .td:nth-child(2){animation-delay:.2s;}
     .td:nth-child(3){animation-delay:.4s;}
     @keyframes tdAnim{0%,60%,100%{transform:translateY(0);opacity:.3}30%{transform:translateY(-8px);opacity:1}}
-
     .follow-wrap{margin-top:18px; padding-top:15px; border-top:1px solid rgba(255,255,255,0.08);}
     .follow-label{font-family:monospace; font-size:8px; letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,.25); margin-bottom:10px;}
     .follow-btn{font-size:12px; color:rgba(79,195,247,.8); padding:10px 14px; margin-bottom:8px; border:1px solid rgba(79,195,247,.15); background:rgba(79,195,247,.05); cursor:pointer; display:block; width:100%; text-align:left; border-radius:8px; transition:all .2s;}
-    .follow-btn:active{background:rgba(79,195,247,0.15); color:#fff; border-color: rgba(79,195,247,0.4);}
-    
     .sphere-hint{position:absolute; bottom:calc(28px + env(safe-area-inset-bottom)); left:0; right:0; text-align:center; font-family:monospace; font-size:8px; letter-spacing:3px; text-transform:uppercase; color:rgba(79,195,247,.2); pointer-events:none;}
   </style>
 </head>
@@ -148,53 +99,33 @@
         <button class="n-btn" onclick="changeAW(1)">›</button>
       </div>
     </div>
-
     <div class="aw-card">
       <img class="aw-img-blur" id="aw-img-blur" src="" alt="" />
       <img class="aw-img" id="aw-img" src="" alt="" />
       <div class="aw-grad"></div>
-      <div class="aw-info">
-        <div class="aw-nm" id="aw-nm">載入中...</div>
-      </div>
+      <div class="aw-info"><div class="aw-nm" id="aw-nm">載入中...</div></div>
     </div>
-
     <div class="audio-pl">
       <div class="prog-area">
-          <div class="prog-track" onclick="scrubAudio(event)" id="p-track">
-            <div class="prog-fill" id="pf"></div>
-          </div>
-          <div class="time-row">
-            <span id="t-now">0:00</span>
-            <span id="t-tot">--:--</span>
-          </div>
+          <div class="prog-track" onclick="scrubAudio(event)" id="p-track"><div class="prog-fill" id="pf"></div></div>
+          <div class="time-row"><span id="t-now">0:00</span><span id="t-tot">--:--</span></div>
       </div>
       <button class="pl-btn" id="pl-btn" onclick="togglePlay()">▶</button>
     </div>
-
     <div class="g-body">
-      <div class="g-text" id="g-text-container">
-        <p>系統初始化中...</p>
-      </div>
+      <div class="g-text" id="g-text-container"><p>系統初始化中...</p></div>
     </div>
-
     <div class="g-bottom" id="g-bottom-orb">
       <div class="mini-orb" onclick="showAI()">
-        <div class="mo-glow"></div>
-        <div class="mo-core"></div>
-        <div class="mo-ring-1"></div>
-        <div class="mo-ring-2"></div>
-        <div class="mo-highlight"></div>
+        <div class="mo-glow"></div><div class="mo-core"></div><div class="mo-ring-1"></div><div class="mo-ring-2"></div><div class="mo-highlight"></div>
       </div>
     </div>
   </div>
 
   <div id="sa">
-    <div class="sa-bg"></div>
-    <div class="sa-grid"></div>
-    <canvas id="orb-canvas"></canvas>
+    <div class="sa-bg"></div><div class="sa-grid"></div><canvas id="orb-canvas"></canvas>
     <div class="sa-topbar">
-      <button class="bk-btn" onclick="hideAI()">←</button>
-      <span class="sa-badge">AI 深度解析引擎</span>
+      <button class="bk-btn" onclick="hideAI()">←</button><span class="sa-badge">AI 深度解析引擎</span>
     </div>
     <div class="q-labels-layer" id="qlayer"></div>
     <div class="sphere-hint">DRAG TO EXPLORE &nbsp;·&nbsp; TAP TO ANALYZE</div>
@@ -213,11 +144,10 @@
 
 <script>
 // ==========================================
-// 1. 全域設定與 API Key
+// 1. API 金鑰設定 (在此輸入)
 // ==========================================
-const GEMINI_API_KEY = 'AIzaSyDVpS21zj9HEzmIyvkI82JsAjtPcAsvdlA'; // <--- 請在此填入您的真實 API 金鑰
+const GEMINI_API_KEY = 'AIzaSyDVpS21zj9HEzmIyvkI82JsAjtPcAsvdlA'; 
 
-// 預設問題集
 const genericQuestions = [
   "可以幫我總結一下這段導覽的核心重點嗎？",
   "這段介紹裡，有什麼最特別或有趣的故事？",
@@ -232,13 +162,11 @@ let currentAudio = new Audio();
 let isPlaying = false;
 
 // ==========================================
-// 2. CSV 資料載入 (PapaParse)
+// 2. CSV 資料載入
 // ==========================================
 window.onload = () => {
   Papa.parse("data.csv", {
-    download: true,
-    header: true,
-    skipEmptyLines: true,
+    download: true, header: true, skipEmptyLines: true,
     complete: function(results) {
       artworks = results.data.map(r => ({
         nm: r.title,
@@ -246,17 +174,8 @@ window.onload = () => {
         audio: `audio/${r.audio}.mp3`,
         desc: r.description || ""
       }));
-      
-      if (artworks.length > 0) {
-        changeAW(0); 
-        initSphere(); // 啟動 3D
-      } else {
-        document.getElementById('g-text-container').innerHTML = "<p>無法讀取資料，請確認 data.csv 位置。</p>";
-      }
-    },
-    error: function(err) {
-      console.error("CSV Parse Error:", err);
-      document.getElementById('g-text-container').innerHTML = "<p>CSV 載入失敗。</p>";
+      if (artworks.length > 0) { changeAW(0); initSphere(); } 
+      else { document.getElementById('g-text-container').innerHTML = "<p>無法讀取資料。</p>"; }
     }
   });
 };
@@ -266,70 +185,50 @@ window.onload = () => {
 // ==========================================
 function formatTime(seconds) {
   if (isNaN(seconds)) return "0:00";
-  const m = Math.floor(seconds / 60);
-  const s = Math.floor(seconds % 60);
+  const m = Math.floor(seconds / 60), s = Math.floor(seconds % 60);
   return `${m}:${String(s).padStart(2,'0')}`;
 }
-
-currentAudio.addEventListener('loadedmetadata', () => { 
-  document.getElementById('t-tot').textContent = formatTime(currentAudio.duration); 
-});
-
+currentAudio.addEventListener('loadedmetadata', () => { document.getElementById('t-tot').textContent = formatTime(currentAudio.duration); });
 currentAudio.addEventListener('timeupdate', () => {
-  const t = currentAudio.currentTime;
-  const dur = currentAudio.duration || 1;
+  const t = currentAudio.currentTime, dur = currentAudio.duration || 1;
   document.getElementById('t-now').textContent = formatTime(t);
   document.getElementById('pf').style.width = `${(t/dur)*100}%`;
 });
-
-currentAudio.addEventListener('ended', () => { 
-  isPlaying = false; 
-  document.getElementById('pl-btn').textContent = '▶'; 
-  setTimeout(showAI, 1200); 
-});
-
+currentAudio.addEventListener('ended', () => { isPlaying = false; document.getElementById('pl-btn').textContent = '▶'; setTimeout(showAI, 1200); });
 function togglePlay(){
   if(isPlaying){ currentAudio.pause(); isPlaying = false; document.getElementById('pl-btn').textContent = '▶'; } 
-  else { currentAudio.play().catch(e=>console.warn("播放受阻")); isPlaying = true; document.getElementById('pl-btn').textContent = '⏸'; }
+  else { currentAudio.play(); isPlaying = true; document.getElementById('pl-btn').textContent = '⏸'; }
 }
-
 function scrubAudio(e){ 
   const r = document.getElementById('p-track').getBoundingClientRect(); 
-  const ratio = (e.clientX - r.left) / r.width;
-  if(currentAudio.duration) currentAudio.currentTime = ratio * currentAudio.duration;
+  if(currentAudio.duration) currentAudio.currentTime = ((e.clientX - r.left) / r.width) * currentAudio.duration;
 }
-
 function changeAW(d){
   if(artworks.length === 0) return;
   curAW = (curAW + d + artworks.length) % artworks.length;
   const a = artworks[curAW];
-  
   document.getElementById('aw-img').src = a.img;
   document.getElementById('aw-img-blur').src = a.img;
   document.getElementById('aw-nm').textContent = a.nm;
   document.getElementById('aw-ct').textContent = `${curAW + 1} / ${artworks.length}`;
   document.getElementById('g-text-container').innerHTML = a.desc.split('\n').filter(p => p.trim()).map(p => `<p>${p}</p>`).join('');
-
-  currentAudio.pause();
-  currentAudio.src = a.audio;
-  currentAudio.load();
-  isPlaying = false;
-  document.getElementById('pl-btn').textContent = '▶';
-  document.getElementById('pf').style.width = '0%';
+  currentAudio.pause(); currentAudio.src = a.audio; currentAudio.load(); isPlaying = false;
+  document.getElementById('pl-btn').textContent = '▶'; document.getElementById('pf').style.width = '0%';
 }
 
 // ==========================================
-// 4. Gemini API 真實解析
+// 4. 解決 404 問題的 Gemini API 請求
 // ==========================================
 async function fetchGeminiAnswer(questionText) {
-  if (!GEMINI_API_KEY || GEMINI_API_KEY.includes('YOUR_GEMINI')) {
-    return "錯誤：尚未設定 API Key。請在程式碼中填入金鑰。//請檢查 API 設定";
+  if (!GEMINI_API_KEY || GEMINI_API_KEY === 'YOUR_GEMINI_API_KEY_HERE') {
+    return "錯誤：尚未設定 API Key。請在程式碼中填寫。//請檢查 API 設定";
   }
 
-  const curArt = artworks[curAW];
+  const curArt = artworks[curAW] || { nm: '', desc: '' };
   const prompt = `你現在是專業導覽員。觀眾正在看展品《${curArt.nm}》。背景：${curArt.desc}。提問：「${questionText}」。請用繁體中文、口語親切地回答(150字內)，結尾加上「//延伸問題一//延伸問題二」。`;
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+  // 修復 404：改用 gemini-1.5-flash-latest 或 gemini-pro 來確保路徑正確
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GEMINI_API_KEY}`;
   
   try {
     const response = await fetch(url, {
@@ -338,15 +237,20 @@ async function fetchGeminiAnswer(questionText) {
       body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
     });
     const data = await response.json();
-    if (!response.ok) throw new Error(data.error.message);
+    
+    if (!response.ok) {
+      console.error("API 錯誤細節:", data);
+      throw new Error(data.error?.message || response.statusText);
+    }
     return data.candidates[0].content.parts[0].text;
   } catch (err) {
+    console.error("連線失敗:", err);
     return `⚠️ API 解析失敗 (${err.message})。//重新嘗試//聯絡管理員`;
   }
 }
 
 // ==========================================
-// 5. 頁面切換與問答邏輯
+// 5. 介面與答案面板切換
 // ==========================================
 function showAI(){ currentAudio.pause(); isPlaying = false; document.getElementById('pl-btn').textContent = '▶'; document.getElementById('sa').classList.add('show'); document.getElementById('g-bottom-orb').classList.add('hide'); }
 function hideAI(){ document.getElementById('sa').classList.remove('show'); document.getElementById('g-bottom-orb').classList.remove('hide'); closeSheet(); }
@@ -402,7 +306,12 @@ function initSphere(){
   const layer=document.getElementById('qlayer');
   genericQuestions.forEach((q,i)=>{
     const el=document.createElement('div'); el.className='q-label'; el.innerHTML=`<div class="ql-pip"></div><div class="ql-box"><span class="ql-num">Q.${String(i+1).padStart(2,'0')}</span><span class="ql-text">${q}</span></div>`;
-    el.addEventListener('click', () => renderAnswerSheet(q, true, i+1));
+    el.addEventListener('click', () => {
+      // 重置所有標籤狀態
+      qLabelEls.forEach(l => l.classList.remove('active'));
+      el.classList.add('active');
+      renderAnswerSheet(q, true, i+1);
+    });
     layer.appendChild(el); qLabelEls.push(el);
   });
 
