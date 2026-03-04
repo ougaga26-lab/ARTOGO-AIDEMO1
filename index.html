@@ -220,7 +220,7 @@ function changeAW(d){
 // 4. 解決 404 問題的 Gemini API 請求
 // ==========================================
 async function fetchGeminiAnswer(questionText) {
-  if (!GEMINI_API_KEY || GEMINI_API_KEY === 'YOUR_GEMINI_API_KEY_HERE') {
+  if (!GEMINI_API_KEY || GEMINI_API_KEY === 'AIzaSyDVpS21zj9HEzmIyvkI82JsAjtPcAsvdlA') {
     return "錯誤：尚未設定 API Key。請在程式碼中填寫。//請檢查 API 設定";
   }
 
@@ -228,7 +228,7 @@ async function fetchGeminiAnswer(questionText) {
   const prompt = `你現在是專業導覽員。觀眾正在看展品《${curArt.nm}》。背景：${curArt.desc}。提問：「${questionText}」。請用繁體中文、口語親切地回答(150字內)，結尾加上「//延伸問題一//延伸問題二」。`;
 
   // 修復 404：改用 gemini-1.5-flash-latest 或 gemini-pro 來確保路徑正確
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GEMINI_API_KEY}`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${AIzaSyDVpS21zj9HEzmIyvkI82JsAjtPcAsvdlA}`;
   
   try {
     const response = await fetch(url, {
