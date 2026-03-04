@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title> AI黛尼看浮世繪 </title>
+  <title>浮世繪 AI 導覽</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <style>
@@ -32,7 +32,7 @@
     .prog-fill::after{content:''; position:absolute; right:-4px; top:50%; transform:translateY(-50%); width:10px; height:10px; border-radius:50%; background:#81d4fa; box-shadow:0 0 10px rgba(129,212,250,1);}
     .time-row { display: flex; justify-content: space-between; font-size: 11px; color: rgba(255,255,255,.3); font-variant-numeric: tabular-nums; }
     
-    .pl-btn{width:42px; height:42px; border-radius:50%; background:linear-gradient(135deg,#4fc3f7,#0288d1); border:none; color:#fff; font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 20px rgba(79,195,247,.4); flex-shrink: 0; font-family: Arial, sans-serif;}
+    .pl-btn{width:42px; height:42px; border-radius:50%; background:linear-gradient(135deg,#4fc3f7,#0288d1); border:none; color:#fff; font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 20px rgba(79,195,247,.4); flex-shrink: 0; font-family: Arial, sans-serif; font-weight: bold;}
     
     .g-body{flex:1; overflow-y:auto; margin:12px auto 0; padding: 0 22px 140px; max-width: 600px; scrollbar-width:none;}
     .g-text{font-size:15px; line-height:1.95; color:rgba(255,255,255,.75); text-align: justify;}
@@ -57,9 +57,12 @@
     .bk-btn{width:36px; height:36px; border-radius:50%; border:1px solid rgba(255,255,255,.15); background:rgba(6,12,40,.7); backdrop-filter:blur(14px); color:rgba(255,255,255,.65); font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center; pointer-events:auto;}
     .sa-badge{font-size:9px; letter-spacing:2px; text-transform:uppercase; color:rgba(79,195,247,.8); background:rgba(6,12,40,.7); backdrop-filter:blur(14px); border:1px solid rgba(79,195,247,.25); padding:6px 14px; border-radius:20px;}
     
+    /* 🏆 穿透層核心修正：層級不感應觸控 */
     .q-labels-layer{position:absolute;inset:0;z-index:15;pointer-events:none;}
     .q-label{position:absolute; transform:translate(-50%,-50%); transition:opacity .28s; user-select:none; pointer-events: none;}
     .ql-pip{position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:8px; height:8px; border-radius:50%; background:rgba(79,195,247,.9); box-shadow:0 0 12px rgba(79,195,247,.8); z-index:2;}
+    
+    /* 只讓問題框框能被點擊 */
     .ql-box{position:relative; background:rgba(3,8,36,.88); backdrop-filter:blur(16px); border:1px solid rgba(79,195,247,.4); padding:10px 14px; max-width:180px; min-width:110px; pointer-events: auto; cursor: pointer;}
     .ql-box::before, .ql-box::after{content:''; position:absolute; width:12px; height:12px; border-color:rgba(79,195,247,.9); border-style:solid;}
     .ql-box::before{top:-1px; left:-1px; border-width:2.5px 0 0 2.5px;}
@@ -74,7 +77,7 @@
     .sheet-body{flex:1; overflow-y:auto; padding:0 22px 30px; scrollbar-width:none;}
     .sheet-q{font-size:17px; font-weight:600; color:#fff; line-height:1.4; margin-bottom:16px;}
     
-    /* 修正思考中文字顏色 */
+    /* 🏆 黛尼思考中文字樣式 */
     #sheeta { color: #4fc3f7; font-size: 14px; line-height: 1.85; }
     .sheet-ans{font-size:14px; color:rgba(255,255,255,0.8); line-height:1.85;}
     
@@ -142,6 +145,7 @@ let currentAudio = new Audio();
 let isPlaying = false;
 let preloadTimer = null;
 
+// ════ CSV 載入 & 排序 ════
 window.onload = () => {
   Papa.parse("data.csv", {
     download: true, header: true, skipEmptyLines: true,
@@ -163,6 +167,7 @@ window.onload = () => {
   });
 };
 
+// ════ 播放器控制 ════
 document.getElementById('p-track').addEventListener('click', (e) => {
   const rect = e.currentTarget.getBoundingClientRect();
   const pos = (e.clientX - rect.left) / rect.width;
@@ -206,7 +211,7 @@ function changeAW(d){
   document.getElementById('g-text-container').innerHTML = a.desc.split('\n').filter(p => p.trim()).map(p => `<p>${p}</p>`).join('');
   
   if(qLabelEls.length > 0) {
-    qLabelEls.forEach(el => el.querySelector('.ql-text').textContent = "AI黛尼準備中...");
+    qLabelEls.forEach(el => el.querySelector('.ql-text').textContent = "AI 準備中...");
   }
 
   currentAudio.pause(); currentAudio.src = a.audio; currentAudio.load(); isPlaying = false;
@@ -216,6 +221,7 @@ function changeAW(d){
   preloadTimer = setTimeout(() => preloadFullQuestions(curAW), 3000);
 }
 
+// ════ 全自動預載 ════
 async function preloadFullQuestions(artIndex) {
   const curArt = artworks[artIndex];
   const cacheKey = `qs_v3_${curArt.nm}`;
@@ -253,7 +259,7 @@ async function preloadFullQuestions(artIndex) {
 
   } catch (err) {
     curArt.isFetching = false;
-    let errMsg = err.message === "429" ? "AI黛尼工作量過大...(請稍候)" : "載入失敗";
+    let errMsg = err.message === "429" ? "API 忙碌中(請稍候)" : "載入失敗";
     if (curAW === artIndex) updateQuestionLabels(Array(NUM_Q).fill(errMsg));
   }
 }
@@ -267,8 +273,10 @@ function updateQuestionLabels(qs) {
 async function renderAnswerSheet(qText) {
   document.getElementById('sheetq').textContent = qText;
   
-  // 修改思考中文字
-  document.getElementById('sheeta').innerHTML = 'AI黛尼思考中...請稍後';
+  // 🏆 黛尼思考中...請稍後 (淺藍色文字)
+  const sheetaEl = document.getElementById('sheeta');
+  sheetaEl.style.color = '#4fc3f7';
+  sheetaEl.innerHTML = 'AI黛尼思考中...請稍後';
   document.getElementById('ans-sheet').classList.add('open');
   
   const prompt = `展品《${artworks[curAW].nm}》，背景：${artworks[curAW].desc}。提問：「${qText}」。親切口語回答(150字內)，結尾加兩個延伸提問用//分隔。`;
@@ -282,7 +290,7 @@ async function renderAnswerSheet(qText) {
     const reply = data.candidates[0].content.parts[0].text;
     const parts = reply.split('//').map(s => s.trim()).filter(s => s);
     
-    // 答案切換回白色字體樣式
+    sheetaEl.style.color = 'rgba(255,255,255,0.8)'; // 答案切換回白色系
     let html = `<div class="sheet-ans">${parts[0].replace(/\n/g,'<br>')}</div>`;
     if(parts.length > 1){
       html += `<div class="follow-wrap">`;
@@ -291,9 +299,9 @@ async function renderAnswerSheet(qText) {
       });
       html += `</div>`;
     }
-    document.getElementById('sheeta').innerHTML = html;
+    sheetaEl.innerHTML = html;
   } catch (err) {
-    document.getElementById('sheeta').innerHTML = "連線失敗，請重試。";
+    sheetaEl.innerHTML = "連線失敗，請重試。";
   }
 }
 
@@ -309,23 +317,31 @@ function showAI(){
 function hideAI(){ document.getElementById('sa').classList.remove('show'); document.getElementById('g-bottom-orb').classList.remove('hide'); closeSheet(); }
 function closeSheet(){ document.getElementById('ans-sheet').classList.remove('open'); }
 
+// ════ THREE.JS 核心邏輯 ════
 let renderer, scene, camera, wire, qLabelEls=[];
 function initSphere(){
-  const canvas=document.getElementById('orb-canvas');
-  renderer=new THREE.WebGLRenderer({canvas, alpha:true, antialias:true});
+  const canvas = document.getElementById('orb-canvas');
+  renderer = new THREE.WebGLRenderer({canvas, alpha:true, antialias:true});
   renderer.setSize(window.innerWidth, window.innerHeight);
-  scene=new THREE.Scene();
-  camera=new THREE.PerspectiveCamera(58, window.innerWidth/window.innerHeight, 0.1, 100);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  
+  scene = new THREE.Scene();
+  camera = new THREE.PerspectiveCamera(58, window.innerWidth/window.innerHeight, 0.1, 100);
   camera.position.z = 3.9;
-  wire=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.IcosahedronGeometry(1.25, 3)), new THREE.LineBasicMaterial({color:0x4fc3f7, opacity:0.2, transparent:true}));
+  
+  // 🏆 球體半徑回縮至 1.25，保證流暢感
+  wire = new THREE.LineSegments(
+    new THREE.EdgesGeometry(new THREE.IcosahedronGeometry(1.25, 3)), 
+    new THREE.LineBasicMaterial({color:0x4fc3f7, opacity:0.2, transparent:true})
+  );
   wire.position.y = 0.28;
   scene.add(wire);
 
-  const layer=document.getElementById('qlayer');
+  const layer = document.getElementById('qlayer');
   for(let i=0; i<NUM_Q; i++){
-    const el=document.createElement('div'); el.className='q-label'; 
+    const el = document.createElement('div'); el.className='q-label'; 
     el.innerHTML=`<div class="ql-pip"></div><div class="ql-box"><span class="ql-num">Q.${String(i+1).padStart(2,'0')}</span><span class="ql-text">準備中...</span></div>`;
-    el.querySelector('.ql-box').addEventListener('click', () => {
+    el.querySelector('.ql-box').addEventListener('click', (ev) => {
       const text = el.querySelector('.ql-text').textContent;
       if(text.includes('中') || text.includes('失敗')) return;
       renderAnswerSheet(text);
@@ -333,9 +349,24 @@ function initSphere(){
     layer.appendChild(el); qLabelEls.push(el);
   }
 
+  // 🏆 強化版操作機制：抓取底層 Canvas
+  let isDown = false, lastX, lastY;
+  canvas.addEventListener('pointerdown', e => { 
+    isDown = true; 
+    lastX = e.clientX; lastY = e.clientY; 
+    canvas.setPointerCapture(e.pointerId); 
+  });
+  window.addEventListener('pointermove', e => {
+    if (!isDown) return;
+    wire.rotation.y += (e.clientX - lastX) * 0.008;
+    wire.rotation.x += (e.clientY - lastY) * 0.005;
+    lastX = e.clientX; lastY = e.clientY;
+  });
+  window.addEventListener('pointerup', () => isDown = false);
+
   const animate = () => {
     requestAnimationFrame(animate);
-    wire.rotation.y += 0.0005;
+    if(!isDown) wire.rotation.y += 0.0006;
     renderer.render(scene, camera);
     updateLabels();
   };
@@ -352,7 +383,7 @@ function updateLabels(){
   })();
   const _v3=new THREE.Vector3();
   anchors.forEach((anchor, i)=>{
-    const wPos=anchor.clone().applyEuler(wire.rotation).add(wire.position);
+    const wPos = anchor.clone().applyEuler(wire.rotation).add(wire.position);
     _v3.copy(wPos).project(camera);
     qLabelEls[i].style.left = (_v3.x+1)/2*window.innerWidth+'px';
     qLabelEls[i].style.top = -(_v3.y-1)/2*window.innerHeight+'px';
