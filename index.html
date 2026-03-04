@@ -144,9 +144,10 @@
 
 <script>
 // ==========================================
-// 1. API 金鑰設定 (在此輸入)
+// 1. 唯一需要修改的地方：請在下方引號內貼上你的 API KEY
 // ==========================================
 const GEMINI_API_KEY = 'AIzaSyDVpS21zj9HEzmIyvkI82JsAjtPcAsvdlA'; 
+// ==========================================
 
 const genericQuestions = [
   "可以幫我總結一下這段導覽的核心重點嗎？",
@@ -161,9 +162,7 @@ let curAW = 0;
 let currentAudio = new Audio();
 let isPlaying = false;
 
-// ==========================================
-// 2. CSV 資料載入
-// ==========================================
+// CSV 資料載入
 window.onload = () => {
   Papa.parse("data.csv", {
     download: true, header: true, skipEmptyLines: true,
@@ -180,9 +179,7 @@ window.onload = () => {
   });
 };
 
-// ==========================================
-// 3. 播放器控制
-// ==========================================
+// 播放器控制
 function formatTime(seconds) {
   if (isNaN(seconds)) return "0:00";
   const m = Math.floor(seconds / 60), s = Math.floor(seconds % 60);
@@ -217,17 +214,17 @@ function changeAW(d){
 }
 
 // ==========================================
-// 4. 解決 404 問題的 Gemini API 請求
+// Gemini API 請求 (模型已修正為 gemini-1.5-flash)
 // ==========================================
 async function fetchGeminiAnswer(questionText) {
-  if (!GEMINI_API_KEY || GEMINI_API_KEY === 'AIzaSyDVpS21zj9HEzmIyvkI82JsAjtPcAsvdlA') {
+  if (!GEMINI_API_KEY || GEMINI_API_KEY.includes('請把這段中文字')) {
     return "錯誤：尚未設定 API Key。請在程式碼中填寫。//請檢查 API 設定";
   }
 
   const curArt = artworks[curAW] || { nm: '', desc: '' };
   const prompt = `你現在是專業導覽員。觀眾正在看展品《${curArt.nm}》。背景：${curArt.desc}。提問：「${questionText}」。請用繁體中文、口語親切地回答(150字內)，結尾加上「//延伸問題一//延伸問題二」。`;
 
-  // 修復 404：改用 gemini-1.5-flash-latest 或 gemini-pro 來確保路徑正確
+  // 這裡會自動讀取你上面填寫的 GEMINI_API_KEY，請不要在這裡修改網址！
   const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
   
   try {
@@ -249,9 +246,7 @@ async function fetchGeminiAnswer(questionText) {
   }
 }
 
-// ==========================================
-// 5. 介面與答案面板切換
-// ==========================================
+// 介面與答案面板切換
 function showAI(){ currentAudio.pause(); isPlaying = false; document.getElementById('pl-btn').textContent = '▶'; document.getElementById('sa').classList.add('show'); document.getElementById('g-bottom-orb').classList.add('hide'); }
 function hideAI(){ document.getElementById('sa').classList.remove('show'); document.getElementById('g-bottom-orb').classList.remove('hide'); closeSheet(); }
 
@@ -277,9 +272,7 @@ async function renderAnswerSheet(qText, isMain = false, idx = 0) {
 
 function closeSheet(){ document.getElementById('ans-sheet').classList.remove('open'); }
 
-// ==========================================
-// 6. THREE.JS 3D 空間 (轉速：0.0005)
-// ==========================================
+// THREE.JS 3D 空間
 let PW = window.innerWidth, PH = window.innerHeight;
 let renderer, scene, camera, wire;
 let baseY=0, baseX=0, isDrag=false, lastPX=0, lastPY=0, sphereInited=false, qLabelEls=[];
@@ -307,7 +300,6 @@ function initSphere(){
   genericQuestions.forEach((q,i)=>{
     const el=document.createElement('div'); el.className='q-label'; el.innerHTML=`<div class="ql-pip"></div><div class="ql-box"><span class="ql-num">Q.${String(i+1).padStart(2,'0')}</span><span class="ql-text">${q}</span></div>`;
     el.addEventListener('click', () => {
-      // 重置所有標籤狀態
       qLabelEls.forEach(l => l.classList.remove('active'));
       el.classList.add('active');
       renderAnswerSheet(q, true, i+1);
