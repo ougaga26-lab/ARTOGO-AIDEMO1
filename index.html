@@ -69,18 +69,18 @@
     
     .q-labels-layer{position:absolute;inset:0;z-index:15;pointer-events:none;}
     .q-label{position:absolute; transform:translate(-50%,-50%); pointer-events:auto; cursor:pointer; transition:opacity .28s; user-select:none;}
-    .ql-pip{position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:6px; height:6px; border-radius:50%; background:rgba(79,195,247,.9); box-shadow:0 0 10px rgba(79,195,247,.8); z-index:2; pointer-events:none;}
+    .ql-pip{position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:8px; height:8px; border-radius:50%; background:rgba(79,195,247,.9); box-shadow:0 0 12px rgba(79,195,247,.8); z-index:2; pointer-events:none;}
     
-    /* 保持標籤大小，讓它們豐富且稍微重疊也沒關係 */
-    .ql-box{position:relative; background:rgba(3,8,36,.88); backdrop-filter:blur(16px); border:1px solid rgba(79,195,247,.3); padding:6px 10px; max-width:140px; min-width:70px;}
-    .ql-box::before, .ql-box::after{content:''; position:absolute; width:8px; height:8px; border-color:rgba(79,195,247,.8); border-style:solid;}
-    .ql-box::before{top:-1px; left:-1px; border-width:1.5px 0 0 1.5px;}
-    .ql-box::after{bottom:-1px; right:-1px; border-width:0 1.5px 1.5px 0;}
-    .ql-num{display:block; font-family:monospace; font-size:8px; letter-spacing:2px; color:rgba(79,195,247,.5); margin-bottom:4px; text-transform:uppercase;}
-    .ql-text{display:block; font-size:10px; color:rgba(255,255,255,.8); line-height:1.45;}
+    /* 🏆 升級版：加大 Label 尺寸、Padding 與字體，讓畫面更豐富 */
+    .ql-box{position:relative; background:rgba(3,8,36,.88); backdrop-filter:blur(16px); border:1px solid rgba(79,195,247,.4); padding:10px 14px; max-width:180px; min-width:100px;}
+    .ql-box::before, .ql-box::after{content:''; position:absolute; width:10px; height:10px; border-color:rgba(79,195,247,.9); border-style:solid;}
+    .ql-box::before{top:-1px; left:-1px; border-width:2px 0 0 2px;}
+    .ql-box::after{bottom:-1px; right:-1px; border-width:0 2px 2px 0;}
+    .ql-num{display:block; font-family:monospace; font-size:10px; letter-spacing:2px; color:rgba(79,195,247,.6); margin-bottom:6px; text-transform:uppercase; font-weight:bold;}
+    .ql-text{display:block; font-size:13px; color:rgba(255,255,255,.95); line-height:1.55; letter-spacing:0.5px;}
     
-    .q-label.active .ql-box{border-color:rgba(79,195,247,.85);box-shadow:0 0 22px rgba(79,195,247,.2);}
-    .q-label.active .ql-pip{background:#4fc3f7;box-shadow:0 0 12px rgba(79,195,247,1);}
+    .q-label.active .ql-box{border-color:rgba(79,195,247,.9);box-shadow:0 0 25px rgba(79,195,247,.3);}
+    .q-label.active .ql-pip{background:#fff;box-shadow:0 0 15px rgba(79,195,247,1);}
     
     .ans-sheet{position:absolute;bottom:0;left:0;right:0;height:380px;padding-bottom:env(safe-area-inset-bottom);background:rgba(4,10,40,.98);backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);border-top:1px solid rgba(79,195,247,.2);border-radius:28px 28px 0 0;transform:translateY(100%);transition:transform .45s cubic-bezier(.34,1.1,.64,1);z-index:40;display:flex;flex-direction:column;box-shadow: 0 -15px 50px rgba(0,0,0,0.6);}
     .ans-sheet.open{transform:translateY(0);}
@@ -162,12 +162,13 @@
 
 <script>
 const WORKER_URL = 'https://artogoai01.ougaga26.workers.dev/'; 
-const NUM_Q = 15; // 🚀 擴充為 15 個問題，讓畫面滿滿的超豐富！
+const NUM_Q = 10; // 🎯 改回 10 個問題
 
 let artworks = [];
 let curAW = 0;
 let currentAudio = new Audio();
 let isPlaying = false;
+let preloadTimer = null;
 
 // ════ CSV 資料載入 ════
 window.onload = () => {
@@ -179,8 +180,8 @@ window.onload = () => {
         img: `image/${r.image}.jpg`,
         audio: `audio/${r.audio}.mp3`,
         desc: r.description || "",
-        dynamicQs: null, // 用來暫存 AI 生成的問題
-        isFetching: false // 追蹤是否正在背景預載
+        dynamicQs: null, 
+        isFetching: false 
       }));
       if (artworks.length > 0) { 
         initSphere(); 
@@ -224,10 +225,9 @@ function changeAW(d){
   document.getElementById('aw-ct').textContent = `${curAW + 1} / ${artworks.length}`;
   document.getElementById('g-text-container').innerHTML = a.desc.split('\n').filter(p => p.trim()).map(p => `<p>${p}</p>`).join('');
   
-  // 切換畫作時，重置球上的文字狀態
   if(qLabelEls.length > 0) {
     qLabelEls.forEach(el => {
-      el.querySelector('.ql-text').textContent = "AI 預載中...";
+      el.querySelector('.ql-text').textContent = "AI 準備中...";
       el.style.pointerEvents = 'none';
     });
   }
@@ -235,18 +235,24 @@ function changeAW(d){
   currentAudio.pause(); currentAudio.src = a.audio; currentAudio.load(); isPlaying = false;
   document.getElementById('pl-btn').textContent = '▶'; document.getElementById('pf').style.width = '0%';
 
-  // 🏆 無感體驗的核心：切換到這幅畫時，立刻在背景偷偷載入問題！
-  preloadDynamicQuestions(curAW);
+  // 🏆 防手抖機制 (Debounce)：停留 3 秒才發送請求 (3秒機制)
+  clearTimeout(preloadTimer);
+  preloadTimer = setTimeout(() => {
+    preloadDynamicQuestions(curAW);
+  }, 3000); 
 }
 
 // ════ AI 背景偷偷生問題機制 ════
 async function preloadDynamicQuestions(artIndex) {
   const curArt = artworks[artIndex];
   
-  // 如果已經生成過，或是正在生成中，就不要重複呼叫 API 避免浪費額度
   if (curArt.dynamicQs || curArt.isFetching) return; 
 
   curArt.isFetching = true;
+
+  if (document.getElementById('sa').classList.contains('show') && artIndex === curAW) {
+    qLabelEls.forEach(el => el.querySelector('.ql-text').textContent = "AI 深度解析中...");
+  }
 
   const prompt = `你是一個專業的博物館語音導覽員。觀眾正在觀賞展品《${curArt.nm}》，它的背景介紹是：「${curArt.desc}」。請根據這段介紹，生成 ${NUM_Q} 個觀眾可能會想深入追問的問題（例如關於畫家背景、細節、歷史意義等）。
   要求：
@@ -260,28 +266,40 @@ async function preloadDynamicQuestions(artIndex) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
     });
+    
+    if (response.status === 429) {
+      throw new Error("429");
+    }
+    
     const data = await response.json();
     if (!response.ok) throw new Error("API Error");
 
     const text = data.candidates[0].content.parts[0].text;
     let qs = text.split('\n').map(q => q.replace(/^[\d\.、\-*\s]+/, '').trim()).filter(q => q);
     
-    // 確保數量剛好填滿球體
     while(qs.length < NUM_Q) qs.push("這幅作品還有什麼隱藏的細節嗎？");
     qs = qs.slice(0, NUM_Q);
 
-    curArt.dynamicQs = qs; // 存入快取
+    curArt.dynamicQs = qs; 
     curArt.isFetching = false;
 
-    // 🏆 如果觀眾已經點開了 AI 球，而且預載剛好完成，就瞬間幫他更新文字！
     if (curAW === artIndex && document.getElementById('sa').classList.contains('show')) {
       updateQuestionLabels(qs);
     }
 
   } catch (err) {
-    console.error("生成問題失敗:", err);
+    console.warn("生成問題失敗:", err.message);
     curArt.isFetching = false;
-    // 如果失敗了，下次觀眾打開球時會顯示失敗，並允許重試
+    
+    let errMsg = "載入失敗，點擊重試";
+    if (err.message === "429") {
+      errMsg = "API忙碌中，請稍後重試";
+    }
+    
+    if (curAW === artIndex && document.getElementById('sa').classList.contains('show')) {
+      const errQs = Array(NUM_Q).fill(errMsg);
+      updateQuestionLabels(errQs);
+    }
   }
 }
 
@@ -289,7 +307,7 @@ function updateQuestionLabels(qs) {
   qs.forEach((q, i) => {
     if(qLabelEls[i]) {
       qLabelEls[i].querySelector('.ql-text').textContent = q;
-      qLabelEls[i].style.pointerEvents = 'auto'; // 恢復可點擊
+      qLabelEls[i].style.pointerEvents = 'auto'; 
     }
   });
 }
@@ -305,11 +323,16 @@ async function fetchGeminiAnswer(questionText) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
     });
+    
+    if (response.status === 429) {
+      return "目前提問人數較多，API 額度已達上限，請休息一下稍後再試！//重新嘗試";
+    }
+
     const data = await response.json();
     if (!response.ok) throw new Error(data.error?.message || response.statusText);
     return data.candidates[0].content.parts[0].text;
   } catch (err) {
-    return `⚠️ API 解析失敗 (${err.message})。//重新嘗試//聯絡管理員`;
+    return `⚠️ 網路連線錯誤，請稍後再試。//重新嘗試`;
   }
 }
 
@@ -322,22 +345,24 @@ function showAI(){
   const curArt = artworks[curAW];
   
   if (curArt.dynamicQs) {
-    // 🏆 最理想狀況：背景早就偷偷載完了，瞬間顯示！
     updateQuestionLabels(curArt.dynamicQs);
   } else {
-    // 如果觀眾「秒按」球體，背景還沒載完，就先顯示等待畫面
-    const tempQs = Array(NUM_Q).fill("AI 極速解析中...");
-    updateQuestionLabels(tempQs);
-    qLabelEls.forEach(el => el.style.pointerEvents = 'none'); // 暫時不給按
-    
-    // 如果不知為何沒有觸發背景載入，就手動補推一把
     if (!curArt.isFetching) preloadDynamicQuestions(curAW);
+    
+    const tempQs = Array(NUM_Q).fill("AI 深度解析中...");
+    updateQuestionLabels(tempQs);
+    qLabelEls.forEach(el => el.style.pointerEvents = 'none'); 
   }
 }
 
 function hideAI(){ document.getElementById('sa').classList.remove('show'); document.getElementById('g-bottom-orb').classList.remove('hide'); closeSheet(); }
 
 async function renderAnswerSheet(qText, isMain = false, idx = 0) {
+  if (qText.includes("忙碌中") || qText.includes("重試")) {
+    preloadDynamicQuestions(curAW); 
+    return;
+  }
+
   document.getElementById('seyebrow').textContent = isMain ? `QUERY.${String(idx).padStart(2,'0')}` : `FOLLOW-UP ANALYTICS`;
   document.getElementById('sheetq').textContent = qText;
   document.getElementById('sheeta').innerHTML = '<div class="tdots"><div class="td"></div><div class="td"></div><div class="td"></div></div>';
@@ -359,14 +384,13 @@ async function renderAnswerSheet(qText, isMain = false, idx = 0) {
 }
 function closeSheet(){ document.getElementById('ans-sheet').classList.remove('open'); }
 
-// ════ THREE.JS 3D 空間 (15 個點滿版佈局) ════
+// ════ THREE.JS 3D 空間 ════
 let PW = window.innerWidth, PH = window.innerHeight;
 let renderer, scene, camera, wire;
 let baseY=0, baseX=0, isDrag=false, lastPX=0, lastPY=0, sphereInited=false, qLabelEls=[];
-const SPHRAD = 1.35; // 維持大球徑容納 15 個標籤
+const SPHRAD = 1.35; 
 const SPHERE_Y = 0.28;
 
-// 費氏數列球體分佈演算法 (完美均勻生成 15 個點)
 const anchors = (()=>{ 
   const pts=[]; 
   for(let i=0; i<NUM_Q; i++){ 
@@ -397,11 +421,11 @@ function initSphere(){
   const layer=document.getElementById('qlayer');
   for(let i=0; i<NUM_Q; i++){
     const el=document.createElement('div'); el.className='q-label'; 
-    el.innerHTML=`<div class="ql-pip"></div><div class="ql-box"><span class="ql-num">Q.${String(i+1).padStart(2,'0')}</span><span class="ql-text">等待解析...</span></div>`;
+    el.innerHTML=`<div class="ql-pip"></div><div class="ql-box"><span class="ql-num">Q.${String(i+1).padStart(2,'0')}</span><span class="ql-text">AI 準備中...</span></div>`;
     
     el.addEventListener('click', () => {
       const text = el.querySelector('.ql-text').textContent;
-      if(text.includes('解析中') || text.includes('預載中') || text.includes('等待')) return; 
+      if(text.includes('解析中') || text.includes('預載中') || text.includes('準備中')) return; 
 
       qLabelEls.forEach(l => l.classList.remove('active'));
       el.classList.add('active');
