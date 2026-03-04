@@ -17,30 +17,24 @@
     .aw-nav{display:flex; align-items:center; gap:8px;}
     .n-btn{width:32px; height:32px; border-radius:50%; border:1px solid rgba(255,255,255,.18); background:rgba(255,255,255,.07); color:rgba(255,255,255,.8); font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center;}
     .aw-ct{font-size:12px; color:rgba(255,255,255,.35); min-width: 40px; text-align: center; letter-spacing: 1px;}
-    
     .aw-card{margin:0 auto; width: calc(100% - 44px); max-width: 500px; aspect-ratio: 1/1; border-radius:24px; overflow:hidden; position:relative; flex-shrink:0; box-shadow:0 20px 50px rgba(0,0,0,0.5); background: #000;}
     .aw-img-blur {position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: blur(30px) brightness(0.5); transform: scale(1.2);}
     .aw-img{ position: relative; width:100%; height:100%; object-fit:contain; z-index: 1; }
     .aw-grad{position:absolute;inset:0;background:linear-gradient(to top,rgba(8,22,70,0.85) 0%, transparent 40%); z-index: 2;}
     .aw-info{position:absolute;bottom:18px;left:20px;right:20px; z-index: 3;}
     .aw-nm{font-size:22px; font-weight:700; color:#fff; letter-spacing:1px; text-shadow:0 2px 15px rgba(0,0,0,0.6);}
-    
     .audio-pl{margin:14px auto 0; width: calc(100% - 44px); max-width: 500px; padding:12px 18px; background:rgba(255,255,255,.07); backdrop-filter:blur(25px); border-radius:18px; border:1px solid rgba(255,255,255,.1); flex-shrink:0; display: flex; align-items: center; gap: 15px;}
     .prog-area { flex: 1; display: flex; flex-direction: column; gap: 6px; }
     .prog-track{height:4px; background:rgba(255,255,255,.12); border-radius:2px; cursor:pointer; position: relative;}
     .prog-fill{height:100%; background:linear-gradient(90deg,#4fc3f7,#81d4fa); border-radius:2px; width:0%; position:relative; pointer-events: none;}
     .prog-fill::after{content:''; position:absolute; right:-4px; top:50%; transform:translateY(-50%); width:10px; height:10px; border-radius:50%; background:#81d4fa; box-shadow:0 0 10px rgba(129,212,250,1);}
     .time-row { display: flex; justify-content: space-between; font-size: 11px; color: rgba(255,255,255,.3); font-variant-numeric: tabular-nums; }
-    
     .pl-btn{width:42px; height:42px; border-radius:50%; background:linear-gradient(135deg,#4fc3f7,#0288d1); border:none; color:#fff; font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 20px rgba(79,195,247,.4); flex-shrink: 0; font-family: Arial, sans-serif; font-weight: bold;}
-    
     .g-body{flex:1; overflow-y:auto; margin:12px auto 0; padding: 0 22px 140px; max-width: 600px; scrollbar-width:none;}
     .g-text{font-size:15px; line-height:1.95; color:rgba(255,255,255,.75); text-align: justify;}
     .g-text p{margin-bottom:16px;}
-    
     .g-bottom {position: absolute; bottom: 0; left: 0; right: 0; padding-top: 100px; padding-bottom: calc(25px + env(safe-area-inset-bottom)); display: flex; justify-content: center; align-items: center; background: linear-gradient(to top, #071a3a 15%, rgba(7, 26, 58, 0.6) 55%, transparent 100%); transition: opacity 0.4s ease, transform 0.4s ease; z-index: 20; pointer-events: none; }
     .g-bottom.hide { opacity: 0; pointer-events: none; transform: translateY(30px); }
-    
     .mini-orb { width: 60px; height: 60px; position: relative; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 10; transition: transform 0.2s; pointer-events: auto; }
     .mo-glow { position: absolute; width: 100px; height: 100px; border-radius: 50%; background: radial-gradient(circle, rgba(79, 195, 247, 0.3) 0%, rgba(138, 43, 226, 0.1) 45%, transparent 70%); animation: pulseGlow 3s ease-in-out infinite alternate; pointer-events: none; }
     .mo-core { position: absolute; width: 42px; height: 42px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #e0b0ff 0%, #a855f7 25%, #4338ca 65%, #1e1b4b 100%); box-shadow: inset -3px -3px 8px rgba(0,0,0,0.6), inset 4px 4px 10px rgba(255,255,255,0.7), 0 0 14px rgba(168, 85, 247, 0.5); animation: morphCore 6s ease-in-out infinite alternate; }
@@ -57,12 +51,9 @@
     .bk-btn{width:36px; height:36px; border-radius:50%; border:1px solid rgba(255,255,255,.15); background:rgba(6,12,40,.7); backdrop-filter:blur(14px); color:rgba(255,255,255,.65); font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center; pointer-events:auto;}
     .sa-badge{font-size:9px; letter-spacing:2px; text-transform:uppercase; color:rgba(79,195,247,.8); background:rgba(6,12,40,.7); backdrop-filter:blur(14px); border:1px solid rgba(79,195,247,.25); padding:6px 14px; border-radius:20px;}
     
-    /* 🏆 穿透層核心修正：層級不感應觸控 */
     .q-labels-layer{position:absolute;inset:0;z-index:15;pointer-events:none;}
     .q-label{position:absolute; transform:translate(-50%,-50%); transition:opacity .28s; user-select:none; pointer-events: none;}
     .ql-pip{position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:8px; height:8px; border-radius:50%; background:rgba(79,195,247,.9); box-shadow:0 0 12px rgba(79,195,247,.8); z-index:2;}
-    
-    /* 只讓問題框框能被點擊 */
     .ql-box{position:relative; background:rgba(3,8,36,.88); backdrop-filter:blur(16px); border:1px solid rgba(79,195,247,.4); padding:10px 14px; max-width:180px; min-width:110px; pointer-events: auto; cursor: pointer;}
     .ql-box::before, .ql-box::after{content:''; position:absolute; width:12px; height:12px; border-color:rgba(79,195,247,.9); border-style:solid;}
     .ql-box::before{top:-1px; left:-1px; border-width:2.5px 0 0 2.5px;}
@@ -76,11 +67,8 @@
     .sheet-close{width:32px; height:32px; border-radius:50%; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.05); color:rgba(255,255,255,.5); font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center;}
     .sheet-body{flex:1; overflow-y:auto; padding:0 22px 30px; scrollbar-width:none;}
     .sheet-q{font-size:17px; font-weight:600; color:#fff; line-height:1.4; margin-bottom:16px;}
-    
-    /* 🏆 黛尼思考中文字樣式 */
     #sheeta { color: #4fc3f7; font-size: 14px; line-height: 1.85; }
     .sheet-ans{font-size:14px; color:rgba(255,255,255,0.8); line-height:1.85;}
-    
     .follow-wrap{margin-top:18px; padding-top:15px; border-top:1px solid rgba(255,255,255,0.08);}
     .follow-btn{font-size:12px; color:rgba(79,195,247,.8); padding:10px 14px; margin-bottom:8px; border:1px solid rgba(79,195,247,.15); background:rgba(79,195,247,.05); cursor:pointer; display:block; width:100%; text-align:left; border-radius:8px;}
     
@@ -103,7 +91,6 @@
     <div class="aw-card">
       <img class="aw-img-blur" id="aw-img-blur" src="" />
       <img class="aw-img" id="aw-img" src="" />
-      <div class="aw-grad"></div>
       <div class="aw-info"><div class="aw-nm" id="aw-nm">載入中...</div></div>
     </div>
     <div class="audio-pl">
@@ -124,8 +111,7 @@
   <div id="sa">
     <div class="sa-bg"></div><div class="sa-grid"></div><canvas id="orb-canvas"></canvas>
     <div class="sa-topbar">
-      <button class="bk-btn" onclick="hideAI()">←</button>
-      <span class="sa-badge">ARTOGO_AI黛尼看展引擎</span>
+      <button class="bk-btn" onclick="hideAI()">←</button><span class="sa-badge">ARTOGO_AI黛尼看展引擎</span>
     </div>
     <div class="q-labels-layer" id="qlayer"></div>
     <div class="ans-sheet" id="ans-sheet">
@@ -155,51 +141,36 @@ window.onload = () => {
         data.sort((a, b) => (parseInt(a.order) || 0) - (parseInt(b.order) || 0));
       }
       artworks = data.map(r => ({
-        nm: r.title,
-        img: `image/${r.image}.jpg`,
-        audio: `audio/${r.audio}.mp3`,
-        desc: r.description || "",
-        dynamicQs: null,
-        isFetching: false 
+        nm: r.title, img: `image/${r.image}.jpg`, audio: `audio/${r.audio}.mp3`,
+        desc: r.description || "", dynamicQs: null, isFetching: false, isFullLoaded: false
       }));
       if (artworks.length > 0) { initSphere(); changeAW(0); }
     }
   });
 };
 
-// ════ 播放器控制 ════
+// ════ 播放器修正 ════
 document.getElementById('p-track').addEventListener('click', (e) => {
   const rect = e.currentTarget.getBoundingClientRect();
   const pos = (e.clientX - rect.left) / rect.width;
   if (currentAudio.duration) currentAudio.currentTime = pos * currentAudio.duration;
 });
-
 currentAudio.addEventListener('timeupdate', () => {
   const p = (currentAudio.currentTime / currentAudio.duration) * 100 || 0;
   document.getElementById('pf').style.width = p + '%';
   document.getElementById('t-now').textContent = formatTime(currentAudio.currentTime);
 });
-
 currentAudio.addEventListener('loadedmetadata', () => {
   document.getElementById('t-tot').textContent = formatTime(currentAudio.duration);
 });
-
-function formatTime(s) {
-  if (isNaN(s)) return "0:00";
-  return Math.floor(s/60) + ":" + String(Math.floor(s%60)).padStart(2,'0');
-}
-
+function formatTime(s) { if (isNaN(s)) return "0:00"; return Math.floor(s/60) + ":" + String(Math.floor(s%60)).padStart(2,'0'); }
 function togglePlay(){
-  if(isPlaying){
-    currentAudio.pause();
-    document.getElementById('pl-btn').textContent = '▶';
-  } else {
-    currentAudio.play();
-    document.getElementById('pl-btn').textContent = '||';
-  }
+  if(isPlaying){ currentAudio.pause(); document.getElementById('pl-btn').textContent = '▶'; } 
+  else { currentAudio.play(); document.getElementById('pl-btn').textContent = '||'; }
   isPlaying = !isPlaying;
 }
 
+// ════ 切換作品 ════
 function changeAW(d){
   if(artworks.length === 0) return;
   curAW = (curAW + d + artworks.length) % artworks.length;
@@ -210,25 +181,26 @@ function changeAW(d){
   document.getElementById('aw-ct').textContent = `${curAW + 1} / ${artworks.length}`;
   document.getElementById('g-text-container').innerHTML = a.desc.split('\n').filter(p => p.trim()).map(p => `<p>${p}</p>`).join('');
   
-  if(qLabelEls.length > 0) {
-    qLabelEls.forEach(el => el.querySelector('.ql-text').textContent = "AI 準備中...");
-  }
+  if(qLabelEls.length > 0) qLabelEls.forEach(el => el.querySelector('.ql-text').textContent = "黛尼解析中...");
 
   currentAudio.pause(); currentAudio.src = a.audio; currentAudio.load(); isPlaying = false;
   document.getElementById('pl-btn').textContent = '▶'; document.getElementById('pf').style.width = '0%';
 
+  // 🏆 策略：切換 3 秒後，只生前 3 題
   clearTimeout(preloadTimer);
-  preloadTimer = setTimeout(() => preloadFullQuestions(curAW), 3000);
+  preloadTimer = setTimeout(() => preloadPartQuestions(curAW), 3000);
 }
 
-// ════ 全自動預載 ════
-async function preloadFullQuestions(artIndex) {
+// ════ 3+7 混合生成策略 ════
+async function preloadPartQuestions(artIndex) {
   const curArt = artworks[artIndex];
-  const cacheKey = `qs_v3_${curArt.nm}`;
+  const cacheKey = `qs_v4_${curArt.nm}`;
   const savedQs = localStorage.getItem(cacheKey);
   
   if (savedQs) {
-    curArt.dynamicQs = JSON.parse(savedQs);
+    const parsed = JSON.parse(savedQs);
+    curArt.dynamicQs = parsed;
+    curArt.isFullLoaded = (parsed.length >= NUM_Q && !parsed[NUM_Q-1].includes('解析中'));
     if (curAW === artIndex) updateQuestionLabels(curArt.dynamicQs);
     return;
   }
@@ -236,126 +208,118 @@ async function preloadFullQuestions(artIndex) {
   if (curArt.isFetching) return;
   curArt.isFetching = true;
 
-  const prompt = `你是專業導覽員。觀眾看展品《${curArt.nm}》，背景：「${curArt.desc}」。請生成 10 個想追問的問題。每行一個問題，不要編號，口語且簡短(15字內)。`;
-
+  // 🏆 第一步：只拿 3 題
+  const prompt = `你是導覽員。觀眾看《${curArt.nm}》，背景：${curArt.desc}。請直接生成 3 個想追問的問題。每行一個，不要編號，簡短(15字內)。`;
   try {
-    const response = await fetch(WORKER_URL, {
-      method: 'POST',
-      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-    });
-    
+    const response = await fetch(WORKER_URL, { method: 'POST', body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) });
     if (response.status === 429) throw new Error("429");
     const data = await response.json();
     const text = data.candidates[0].content.parts[0].text;
-    
     let qs = text.split('\n').map(q => q.replace(/^[\d\.、\-*\s]+/, '').trim()).filter(q => q);
-    while(qs.length < NUM_Q) qs.push("還有其他有趣的地方嗎？");
-    qs = qs.slice(0, NUM_Q);
-
-    localStorage.setItem(cacheKey, JSON.stringify(qs));
-    curArt.dynamicQs = qs; 
+    
+    // 預填剩下 7 個占位符
+    curArt.dynamicQs = [...qs.slice(0,3), ...Array(7).fill("黛尼持續解析中...")];
     curArt.isFetching = false;
-    if (curAW === artIndex) updateQuestionLabels(qs);
-
+    if (curAW === artIndex) updateQuestionLabels(curArt.dynamicQs);
+    
+    // 🏆 如果正在看 AI 介面，自動啟動第二階段生成剩下的 7 題
+    if (document.getElementById('sa').classList.contains('show')) preloadFullRemainder(artIndex);
   } catch (err) {
     curArt.isFetching = false;
-    let errMsg = err.message === "429" ? "API 忙碌中(請稍候)" : "載入失敗";
-    if (curAW === artIndex) updateQuestionLabels(Array(NUM_Q).fill(errMsg));
+    if (curAW === artIndex) updateQuestionLabels(Array(NUM_Q).fill(err.message === "429" ? "API忙碌中" : "解析失敗"));
   }
 }
 
-function updateQuestionLabels(qs) {
-  qs.forEach((q, i) => {
-    if(qLabelEls[i]) qLabelEls[i].querySelector('.ql-text').textContent = q;
-  });
+async function preloadFullRemainder(artIndex) {
+  const curArt = artworks[artIndex];
+  if (curArt.isFullLoaded || curArt.isFetchingRem) return;
+  curArt.isFetchingRem = true;
+
+  const prompt = `承接剛才對展品《${curArt.nm}》的解析，請再生成 7 個不同的深度追問。每行一個，不要編號，簡短(15字內)。`;
+  try {
+    const response = await fetch(WORKER_URL, { method: 'POST', body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) });
+    const data = await response.json();
+    const text = data.candidates[0].content.parts[0].text;
+    let qs = text.split('\n').map(q => q.replace(/^[\d\.、\-*\s]+/, '').trim()).filter(q => q);
+    
+    // 合併
+    const first3 = curArt.dynamicQs.slice(0,3);
+    const final10 = [...first3, ...qs].slice(0, 10);
+    while(final10.length < 10) final10.push("還有其他細節嗎？");
+
+    localStorage.setItem(`qs_v4_${curArt.nm}`, JSON.stringify(final10));
+    curArt.dynamicQs = final10;
+    curArt.isFullLoaded = true;
+    curArt.isFetchingRem = false;
+    if (curAW === artIndex) updateQuestionLabels(final10);
+  } catch (err) { curArt.isFetchingRem = false; }
 }
 
+function updateQuestionLabels(qs) {
+  qs.forEach((q, i) => { if(qLabelEls[i]) qLabelEls[i].querySelector('.ql-text').textContent = q; });
+}
+
+// ════ AI 回答 ════
 async function renderAnswerSheet(qText) {
   document.getElementById('sheetq').textContent = qText;
-  
-  // 🏆 黛尼思考中...請稍後 (淺藍色文字)
   const sheetaEl = document.getElementById('sheeta');
   sheetaEl.style.color = '#4fc3f7';
   sheetaEl.innerHTML = 'AI黛尼思考中...請稍後';
   document.getElementById('ans-sheet').classList.add('open');
-  
   const prompt = `展品《${artworks[curAW].nm}》，背景：${artworks[curAW].desc}。提問：「${qText}」。親切口語回答(150字內)，結尾加兩個延伸提問用//分隔。`;
-  
   try {
-    const response = await fetch(WORKER_URL, {
-      method: 'POST',
-      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-    });
+    const response = await fetch(WORKER_URL, { method: 'POST', body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) });
     const data = await response.json();
     const reply = data.candidates[0].content.parts[0].text;
     const parts = reply.split('//').map(s => s.trim()).filter(s => s);
-    
-    sheetaEl.style.color = 'rgba(255,255,255,0.8)'; // 答案切換回白色系
+    sheetaEl.style.color = 'rgba(255,255,255,0.8)';
     let html = `<div class="sheet-ans">${parts[0].replace(/\n/g,'<br>')}</div>`;
     if(parts.length > 1){
       html += `<div class="follow-wrap">`;
-      parts.slice(1).forEach(fq => { 
-        html += `<button class="follow-btn" onclick="renderAnswerSheet('${fq.replace(/'/g, "\\'")}')">${fq}</button>`; 
-      });
+      parts.slice(1).forEach(fq => { html += `<button class="follow-btn" onclick="renderAnswerSheet('${fq.replace(/'/g, "\\'")}')">${fq}</button>`; });
       html += `</div>`;
     }
     sheetaEl.innerHTML = html;
-  } catch (err) {
-    sheetaEl.innerHTML = "連線失敗，請重試。";
-  }
+  } catch (err) { sheetaEl.innerHTML = "連線失敗，請重試。"; }
 }
 
 function showAI(){ 
-  currentAudio.pause(); isPlaying = false; document.getElementById('pl-btn').textContent = '▶'; 
-  document.getElementById('sa').classList.add('show'); 
-  document.getElementById('g-bottom-orb').classList.add('hide'); 
+  currentAudio.pause(); document.getElementById('sa').classList.add('show'); document.getElementById('g-bottom-orb').classList.add('hide'); 
   const curArt = artworks[curAW];
-  if (curArt.dynamicQs) updateQuestionLabels(curArt.dynamicQs);
-  else preloadFullQuestions(curAW);
+  if (curArt.dynamicQs) {
+    updateQuestionLabels(curArt.dynamicQs);
+    if (!curArt.isFullLoaded) preloadFullRemainder(curAW); // 點開後自動補齊剩下 7 題
+  } else preloadPartQuestions(curAW);
 }
-
 function hideAI(){ document.getElementById('sa').classList.remove('show'); document.getElementById('g-bottom-orb').classList.remove('hide'); closeSheet(); }
 function closeSheet(){ document.getElementById('ans-sheet').classList.remove('open'); }
 
-// ════ THREE.JS 核心邏輯 ════
+// ════ THREE.JS ════
 let renderer, scene, camera, wire, qLabelEls=[];
 function initSphere(){
   const canvas = document.getElementById('orb-canvas');
   renderer = new THREE.WebGLRenderer({canvas, alpha:true, antialias:true});
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  
   scene = new THREE.Scene();
   camera = new THREE.PerspectiveCamera(58, window.innerWidth/window.innerHeight, 0.1, 100);
   camera.position.z = 3.9;
-  
-  // 🏆 球體半徑回縮至 1.25，保證流暢感
-  wire = new THREE.LineSegments(
-    new THREE.EdgesGeometry(new THREE.IcosahedronGeometry(1.25, 3)), 
-    new THREE.LineBasicMaterial({color:0x4fc3f7, opacity:0.2, transparent:true})
-  );
+  wire = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.IcosahedronGeometry(1.25, 3)), new THREE.LineBasicMaterial({color:0x4fc3f7, opacity:0.2, transparent:true}));
   wire.position.y = 0.28;
   scene.add(wire);
-
   const layer = document.getElementById('qlayer');
   for(let i=0; i<NUM_Q; i++){
     const el = document.createElement('div'); el.className='q-label'; 
-    el.innerHTML=`<div class="ql-pip"></div><div class="ql-box"><span class="ql-num">Q.${String(i+1).padStart(2,'0')}</span><span class="ql-text">準備中...</span></div>`;
-    el.querySelector('.ql-box').addEventListener('click', (ev) => {
+    el.innerHTML=`<div class="ql-pip"></div><div class="ql-box"><span class="ql-num">Q.${String(i+1).padStart(2,'0')}</span><span class="ql-text">黛尼解析中...</span></div>`;
+    el.querySelector('.ql-box').addEventListener('click', () => {
       const text = el.querySelector('.ql-text').textContent;
       if(text.includes('中') || text.includes('失敗')) return;
       renderAnswerSheet(text);
     });
     layer.appendChild(el); qLabelEls.push(el);
   }
-
-  // 🏆 強化版操作機制：抓取底層 Canvas
   let isDown = false, lastX, lastY;
-  canvas.addEventListener('pointerdown', e => { 
-    isDown = true; 
-    lastX = e.clientX; lastY = e.clientY; 
-    canvas.setPointerCapture(e.pointerId); 
-  });
+  canvas.addEventListener('pointerdown', e => { isDown = true; lastX = e.clientX; lastY = e.clientY; canvas.setPointerCapture(e.pointerId); });
   window.addEventListener('pointermove', e => {
     if (!isDown) return;
     wire.rotation.y += (e.clientX - lastX) * 0.008;
@@ -363,16 +327,9 @@ function initSphere(){
     lastX = e.clientX; lastY = e.clientY;
   });
   window.addEventListener('pointerup', () => isDown = false);
-
-  const animate = () => {
-    requestAnimationFrame(animate);
-    if(!isDown) wire.rotation.y += 0.0006;
-    renderer.render(scene, camera);
-    updateLabels();
-  };
+  const animate = () => { requestAnimationFrame(animate); if(!isDown) wire.rotation.y += 0.0006; renderer.render(scene, camera); updateLabels(); };
   animate();
 }
-
 function updateLabels(){
   const anchors = (()=>{ 
     const pts=[]; for(let i=0; i<NUM_Q; i++){ 
